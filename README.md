@@ -373,8 +373,7 @@ This project is created for academic purposes.
 
 ## 👨‍💻 Author
 
-**SYABANA ANDYDERIS - 296530**
-Final Year IT Student - PID154
+**SYABANA ANDYDERIS - 296530** | Final Year IT Student - PID154
 
 ---
 
