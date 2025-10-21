@@ -39,6 +39,14 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                {user.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className="text-purple-600 hover:text-purple-700 px-3 py-2 rounded-md font-medium text-sm lg:text-base"
+                  >
+                    ⚡ Admin
+                  </Link>
+                )}
                 <Link
                   href="/items/new"
                   className="bg-blue-600 text-white hover:bg-blue-700 px-3 lg:px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base whitespace-nowrap"
@@ -110,6 +118,15 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+                {user.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    className="block text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-md font-medium"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    ⚡ Admin Panel
+                  </Link>
+                )}
                 <Link
                   href="/items/new"
                   className="block text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md font-medium"

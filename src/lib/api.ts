@@ -38,7 +38,7 @@ export function errorResponse(error: string): ApiResponse {
  */
 export function getUserFromRequest(
   request: NextRequest
-): { userId: string; email: string } | null {
+): { userId: string; email: string; role?: string } | null {
   const authHeader = request.headers.get('authorization');
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

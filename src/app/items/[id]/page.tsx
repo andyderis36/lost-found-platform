@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Item {
@@ -58,6 +57,7 @@ export default function ItemDetailPage() {
       fetchItemDetails();
       fetchScans();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, itemId]);
 
   const fetchItemDetails = async () => {
@@ -149,9 +149,12 @@ export default function ItemDetailPage() {
         throw new Error('Failed to update item');
       }
 
-      const data = await response.json();
-      setItem(data.item);
+      // Refresh item data to show updated status
+      await fetchItemDetails();
       setEditMode(false);
+      
+      // Show success message
+      alert('Item status updated successfully!');
     } catch (err) {
       alert('Failed to update item status');
       console.error(err);
@@ -203,12 +206,12 @@ export default function ItemDetailPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            href="/dashboard"
-            className="text-blue-600 hover:underline mb-4 inline-block"
+          <button
+            onClick={() => router.back()}
+            className="text-blue-600 hover:underline mb-4 inline-block cursor-pointer bg-transparent border-none"
           >
-            ← Back to Dashboard
-          </Link>
+            ← Back
+          </button>
         </div>
 
         {error && (
@@ -250,7 +253,7 @@ export default function ItemDetailPage() {
               <p className="text-sm text-gray-600 mb-3">
                 Share this link or scan the QR code to view the public page:
               </p>
-              <div className="bg-gray-100 p-3 rounded text-sm break-all">
+              <div className="bg-gray-100 p-3 rounded text-sm break-all text-gray-900">
                 {typeof window !== 'undefined' && `${window.location.origin}/scan/${item.qrCode}`}
               </div>
             </div>
@@ -276,7 +279,7 @@ export default function ItemDetailPage() {
                   <select
                     value={editData.status}
                     onChange={(e) => setEditData({ status: e.target.value })}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm"
+                    className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-900"
                   >
                     <option value="active">Active</option>
                     <option value="found">Found</option>

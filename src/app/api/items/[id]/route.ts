@@ -43,8 +43,11 @@ export async function GET(
       );
     }
 
-    // Check ownership
-    if (item.userId.toString() !== authUser.userId) {
+    // Check ownership (allow admin to access any item)
+    const isOwner = item.userId.toString() === authUser.userId;
+    const isAdmin = authUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
         errorResponse('Forbidden - You do not own this item'),
         { status: 403 }
@@ -127,8 +130,11 @@ export async function PUT(
       );
     }
 
-    // Check ownership
-    if (item.userId.toString() !== authUser.userId) {
+    // Check ownership (allow admin to update any item)
+    const isOwner = item.userId.toString() === authUser.userId;
+    const isAdmin = authUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
         errorResponse('Forbidden - You do not own this item'),
         { status: 403 }
@@ -244,8 +250,11 @@ export async function DELETE(
       );
     }
 
-    // Check ownership
-    if (item.userId.toString() !== authUser.userId) {
+    // Check ownership (allow admin to delete any item)
+    const isOwner = item.userId.toString() === authUser.userId;
+    const isAdmin = authUser.role === 'admin';
+    
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
         errorResponse('Forbidden - You do not own this item'),
         { status: 403 }

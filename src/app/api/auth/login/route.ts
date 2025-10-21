@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
     const token = generateToken({
       userId: user._id.toString(),
       email: user.email,
+      role: user.role,
     });
 
     // Return success response
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
             email: user.email,
             name: user.name,
             phone: user.phone,
+            role: user.role,
           },
         },
         'Login successful'
