@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { generateQRCodeId, generateQRCodeDataURL } from '@/lib/qrcode';
 import { successResponse, errorResponse, getUserFromRequest, parseBody } from '@/lib/api';
+import { compressImage, getBase64Size } from '@/lib/image';
 import type { CreateItemRequest } from '@/types';
 
 // POST /api/items - Create new item
@@ -69,6 +70,19 @@ export async function POST(request: NextRequest) {
     // Generate QR code image as data URL
     const qrCodeDataUrl = await generateQRCodeDataURL(qrCode);
 
+    // Compress image if provided (backend safety net)
+    let processedImage: string | undefined;
+    if (image && image.startsWith('data:image')) {
+      const originalSize = getBase64Size(image);
+      console.log(`Original image size: ${originalSize}KB`);
+      
+      // Compress image (max 800px, 80% quality)
+      processedImage = await compressImage(image, 800, 80);
+      
+      const compressedSize = getBase64Size(processedImage);
+      console.log(`Compressed image size: ${compressedSize}KB (${Math.round((1 - compressedSize/originalSize) * 100)}% reduction)`);
+    }
+
     // Create new item
     const item = await Item.create({
       userId: authUser.userId,
@@ -76,7 +90,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       category,
       description: description?.trim(),
-      image,
+      image: processedImage || image,
       customFields: customFields || {},
       status: 'active',
     });
