@@ -47,19 +47,19 @@ test-auth.ps1
 test-items.ps1
 test-complete.ps1
 
-# documentation files (optional - can be committed if needed)
- PROJECT_DESIGN.md
-# ARCHITECTURE.md
-# API_TESTING.md
-# SETUP.md
-# QUICKSTART.md
- ADMIN_GUIDE.md
- ADMIN_IMPLEMENTATION.md
- VERCEL_BLOB_SETUP.md
- COMPLETION_CHECKLIST.md
- CHECKLIST.md
- FRONTEND_PAGES.md
- ITEMS_API.md
- AUTH_API.md
- PROJECT_STATUS.md
- FINAL_STATUS.md
+documentation files (optional - can be committed if needed)
+ROJECT_DESIGN.md
+ARCHITECTURE.md
+API_TESTING.md
+SETUP.md
+QUICKSTART.md
+ADMIN_GUIDE.md
+ADMIN_IMPLEMENTATION.md
+VERCEL_BLOB_SETUP.md
+COMPLETION_CHECKLIST.md
+CHECKLIST.md
+FRONTEND_PAGES.md
+ITEMS_API.md
+AUTH_API.md
+PROJECT_STATUS.md
+FINAL_STATUS.md
