@@ -154,6 +154,9 @@ export default function HomePage() {
           <p className="text-gray-400">
             © 2025 Lost & Found Platform. Made with ❤️ for keeping your items safe.
           </p>
+          <p className="text-gray-500 text-sm mt-2">
+            ANDYDERIS PAS
+          </p>
         </div>
       </footer>
     </div>
