@@ -44,7 +44,7 @@ export default function Navbar() {
                     href="/admin"
                     className="text-purple-600 hover:text-purple-700 px-3 py-2 rounded-md font-medium text-sm lg:text-base"
                   >
-                    ⚡ Admin
+                    👑 Admin
                   </Link>
                 )}
                 <Link
@@ -124,7 +124,7 @@ export default function Navbar() {
                     className="block text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-md font-medium"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    ⚡ Admin Panel
+                    👑 Admin Panel
                   </Link>
                 )}
                 <Link
