@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { generateQRCodeId, generateQRCodeDataURL } from '@/lib/qrcode';
@@ -69,6 +70,34 @@ export async function POST(request: NextRequest) {
     // Generate QR code image as data URL
     const qrCodeDataUrl = await generateQRCodeDataURL(qrCode);
 
+    // Upload image to Vercel Blob if provided
+    let imageUrl: string | undefined;
+    if (image && image.startsWith('data:image')) {
+      try {
+        // Convert base64 to buffer
+        const base64Data = image.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Detect image type from base64 prefix
+        const mimeMatch = image.match(/data:image\/(.*?);base64/);
+        const extension = mimeMatch ? mimeMatch[1] : 'jpg';
+        
+        // Upload to Vercel Blob
+        const blob = await put(`items/${qrCode}.${extension}`, buffer, {
+          access: 'public',
+          contentType: `image/${extension}`,
+        });
+        
+        imageUrl = blob.url;
+      } catch (error) {
+        console.error('Failed to upload image to Vercel Blob:', error);
+        // Continue without image if upload fails
+      }
+    } else if (image && image.startsWith('http')) {
+      // If already a URL (e.g., from old base64 data), keep it
+      imageUrl = image;
+    }
+
     // Create new item
     const item = await Item.create({
       userId: authUser.userId,
@@ -76,7 +105,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       category,
       description: description?.trim(),
-      image,
+      image: imageUrl,
       customFields: customFields || {},
       status: 'active',
     });
