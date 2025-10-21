@@ -11,6 +11,7 @@ interface Item {
   category: string;
   status: 'active' | 'found' | 'inactive';
   qrCode: string;
+  image?: string;
   owner: {
     id: string;
     name: string;
@@ -191,7 +192,18 @@ export default function AdminItems() {
         {/* Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={item.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
+              {/* Image Thumbnail - Square 1:1 */}
+              {item.image && (
+                <div className="w-full aspect-square bg-gray-100">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
               <div className="p-6">
                 {/* Item Header */}
                 <div className="flex justify-between items-start mb-4">
