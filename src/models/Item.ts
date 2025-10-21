@@ -27,7 +27,6 @@ const ItemSchema = new Schema<IItem>(
       type: String,
       required: [true, 'QR Code is required'],
       unique: true,
-      index: true,
     },
     name: {
       type: String,
@@ -74,8 +73,7 @@ const ItemSchema = new Schema<IItem>(
   }
 );
 
-// Indexes for faster queries
+// Index for faster queries (qrCode already indexed via unique: true)
 ItemSchema.index({ userId: 1, status: 1 });
-ItemSchema.index({ qrCode: 1 });
 
 export default mongoose.models.Item || mongoose.model<IItem>('Item', ItemSchema);
