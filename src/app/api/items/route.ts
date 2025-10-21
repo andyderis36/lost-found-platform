@@ -3,7 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { generateQRCodeId, generateQRCodeDataURL } from '@/lib/qrcode';
 import { successResponse, errorResponse, getUserFromRequest, parseBody } from '@/lib/api';
-import { compressImage, getBase64Size } from '@/lib/image';
+import { getBase64Size } from '@/lib/image';
 import type { CreateItemRequest } from '@/types';
 
 // POST /api/items - Create new item
@@ -70,17 +70,23 @@ export async function POST(request: NextRequest) {
     // Generate QR code image as data URL
     const qrCodeDataUrl = await generateQRCodeDataURL(qrCode);
 
-    // Compress image if provided (backend safety net)
+    // Backend compression disabled for Vercel compatibility
+    // Frontend already compresses images before upload
     let processedImage: string | undefined;
     if (image && image.startsWith('data:image')) {
       const originalSize = getBase64Size(image);
-      console.log(`Original image size: ${originalSize}KB`);
+      console.log(`Image size: ${originalSize}KB (compressed by frontend)`);
       
-      // Compress image (max 800px, 80% quality)
-      processedImage = await compressImage(image, 800, 80);
+      // Skip backend compression to avoid Sharp binary issues on Vercel
+      processedImage = image;
       
-      const compressedSize = getBase64Size(processedImage);
-      console.log(`Compressed image size: ${compressedSize}KB (${Math.round((1 - compressedSize/originalSize) * 100)}% reduction)`);
+      // Optional: Add size validation
+      if (originalSize > 1000) {
+        return NextResponse.json(
+          errorResponse('Image too large. Please upload image smaller than 1MB.'),
+          { status: 400 }
+        );
+      }
     }
 
     // Create new item
