@@ -154,11 +154,13 @@ export default function ScanPage() {
         {/* Item Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           {item?.image && (
-            <img 
-              src={item.image} 
-              alt={item.name}
-              className="w-full h-64 object-cover"
-            />
+            <div className="w-full max-w-md mx-auto aspect-square bg-white p-4">
+              <img 
+                src={item.image} 
+                alt={item.name}
+                className="w-full h-full object-cover rounded-lg"
+              />
+            </div>
           )}
           
           <div className="p-6">

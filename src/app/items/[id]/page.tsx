@@ -302,11 +302,13 @@ export default function ItemDetailPage() {
                 {(item.image || item.imageUrl) && (
                   <div>
                     <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Image</h3>
-                    <img 
-                      src={item.image || item.imageUrl} 
-                      alt={item.name} 
-                      className="rounded-lg max-w-full h-auto border border-gray-200"
-                    />
+                    <div className="max-w-md mx-auto aspect-square bg-white p-4">
+                      <img 
+                        src={item.image || item.imageUrl} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
                   </div>
                 )}
 
