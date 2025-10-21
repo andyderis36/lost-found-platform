@@ -1,5 +1,3 @@
-okelah gw mau beres2 file yang gapenting boleh/aman dihapus# 🔍 Lost & Found Platform with QR Tags
-
 **PID154 Final Year Project** - A modern web application that helps reunite lost items with their owners through QR code technology.
 
 ## 📋 Overview
