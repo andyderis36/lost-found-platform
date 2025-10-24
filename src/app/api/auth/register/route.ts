@@ -59,12 +59,13 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create new user
+    // Create new user (no email verification)
     const user = await User.create({
       email: email.toLowerCase(),
       name: name.trim(),
       phone: phone?.trim(),
       passwordHash,
+      emailVerified: true, // Auto-verify for now
     });
 
     // Generate JWT token
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       role: user.role,
     });
 
-    // Return success response
+    // Return success response with token
     return NextResponse.json(
       successResponse(
         {
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
             name: user.name,
             phone: user.phone,
             role: user.role,
+            emailVerified: user.emailVerified,
           },
         },
         'User registered successfully'

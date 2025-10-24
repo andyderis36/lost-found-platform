@@ -38,6 +38,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // Use register from AuthContext - auto login after registration
       await register(formData.name, formData.email, formData.password, formData.phone || undefined);
       router.push('/dashboard');
     } catch (err: unknown) {
