@@ -3,12 +3,18 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering user-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Don't show navbar on scan pages
   if (pathname?.startsWith('/scan/')) {
@@ -40,7 +46,13 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-2">
-            {user ? (
+            {!mounted ? (
+              // Skeleton loader during hydration
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+              </div>
+            ) : user ? (
               <>
                 <Link href="/dashboard" className={navLinkClass('/dashboard')}>
                   <div className="flex items-center gap-2">
@@ -127,7 +139,13 @@ export default function Navbar() {
         }`}
       >
         <div className="px-4 py-3 space-y-2 bg-gray-50 border-t border-gray-200">
-          {user ? (
+          {!mounted ? (
+            // Skeleton during hydration
+            <div className="space-y-2">
+              <div className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          ) : user ? (
             <>
               <div className="flex items-center gap-3 px-3 py-3 bg-white rounded-lg mb-3 border border-gray-200">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
