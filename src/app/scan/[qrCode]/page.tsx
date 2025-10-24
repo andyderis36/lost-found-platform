@@ -197,14 +197,15 @@ export default function ScanPage() {
           </div>
         </div>
 
-        {/* Contact Form */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Contact Owner</h2>
-          <p className="text-gray-600 mb-6">
-            Found this item? Fill in your details and we&apos;ll notify the owner.
-          </p>
+        {/* Contact Form - Only show if status is NOT inactive */}
+        {item?.status !== 'inactive' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Contact Owner</h2>
+            <p className="text-gray-600 mb-6">
+              Found this item? Fill in your details and we&apos;ll notify the owner.
+            </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-gray-700 font-medium mb-2">
                 Your Name *
@@ -277,6 +278,18 @@ export default function ScanPage() {
             </p>
           </form>
         </div>
+        )}
+
+        {/* Message for inactive items */}
+        {item?.status === 'inactive' && (
+          <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center">
+            <div className="text-gray-400 text-5xl mb-3">🔒</div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Item Inactive</h3>
+            <p className="text-gray-600">
+              This item has been marked as inactive. The owner is not currently accepting contact requests.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

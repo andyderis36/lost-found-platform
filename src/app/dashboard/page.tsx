@@ -271,8 +271,11 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-600 mb-2">
                     <strong>Category:</strong> {item.category}
                   </p>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
                     <strong>QR Code:</strong> {item.qrCode}
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Created: {new Date(item.createdAt).toLocaleDateString()}
                   </p>
                   <p className="text-gray-700 mb-4 line-clamp-2">
                     {item.description}
