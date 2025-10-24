@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Scan from '@/models/Scan';
 import Item from '@/models/Item';
+// Import User to register schema for populate() - DO NOT REMOVE
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import User from '@/models/User';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import type { CreateScanRequest } from '@/types';
