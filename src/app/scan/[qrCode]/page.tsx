@@ -166,12 +166,16 @@ export default function ScanPage() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-bold text-gray-800">{item?.name}</h1>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                item?.status === 'lost' ? 'bg-red-100 text-red-800' :
+              <span className={`px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide ${
+                item?.status === 'active' ? 'bg-red-100 text-red-800' :
                 item?.status === 'found' ? 'bg-green-100 text-green-800' :
+                item?.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
                 'bg-blue-100 text-blue-800'
               }`}>
-                {item?.status.toUpperCase()}
+                {item?.status === 'active' ? 'LOST' : 
+                 item?.status === 'found' ? 'FOUND' : 
+                 item?.status === 'inactive' ? 'INACTIVE' : 
+                 item?.status.toUpperCase()}
               </span>
             </div>
             
@@ -184,9 +188,9 @@ export default function ScanPage() {
               <p className="text-gray-700 mb-4">{item.description}</p>
             )}
 
-            {item?.status === 'lost' && (
+            {item?.status === 'active' && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-red-800 font-medium">
+                <p className="text-red-800 font-bold">
                   ⚠️ This item has been reported as LOST
                 </p>
                 <p className="text-red-600 text-sm mt-1">

@@ -271,20 +271,20 @@ export default function ItemDetailPage() {
                   {item.name}
                 </h1>
                 {!editMode ? (
-                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                    item.status === 'active' ? 'bg-green-100 text-green-800' :
-                    item.status === 'found' ? 'bg-purple-100 text-purple-800' :
+                  <span className={`px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wide ${
+                    item.status === 'active' ? 'bg-red-100 text-red-800' :
+                    item.status === 'found' ? 'bg-green-100 text-green-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {item.status}
+                    {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
                   </span>
                 ) : (
                   <select
                     value={editData.status}
                     onChange={(e) => setEditData({ status: e.target.value })}
-                    className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                    className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-900 font-semibold"
                   >
-                    <option value="active">Active</option>
+                    <option value="active">Lost</option>
                     <option value="found">Found</option>
                     <option value="inactive">Inactive</option>
                   </select>

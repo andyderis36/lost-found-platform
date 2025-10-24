@@ -129,16 +129,16 @@ export default function DashboardPage() {
             <div className="text-gray-600 text-sm">Total Items</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-green-600 mb-1">
+            <div className="text-3xl font-bold text-red-600 mb-1">
               {items?.filter(i => i.status === 'active').length || 0}
             </div>
-            <div className="text-gray-600 text-sm">Active</div>
+            <div className="text-gray-600 text-sm font-semibold">Lost Items</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-3xl font-bold text-purple-600 mb-1">
+            <div className="text-3xl font-bold text-green-600 mb-1">
               {items?.filter(i => i.status === 'found').length || 0}
             </div>
-            <div className="text-gray-600 text-sm">Found</div>
+            <div className="text-gray-600 text-sm font-semibold">Found Items</div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-3xl font-bold text-gray-600 mb-1">
@@ -163,19 +163,19 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setFilter('active')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                 filter === 'active'
-                  ? 'bg-green-600 text-white'
+                  ? 'bg-red-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              Active ({items?.filter(i => i.status === 'active').length || 0})
+              Lost ({items?.filter(i => i.status === 'active').length || 0})
             </button>
             <button
               onClick={() => setFilter('found')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                 filter === 'found'
-                  ? 'bg-purple-600 text-white'
+                  ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -259,12 +259,12 @@ export default function DashboardPage() {
                     <h3 className="text-xl font-bold text-gray-900">
                       {item.name}
                     </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      item.status === 'active' ? 'bg-green-100 text-green-800' :
-                      item.status === 'found' ? 'bg-purple-100 text-purple-800' :
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                      item.status === 'active' ? 'bg-red-100 text-red-800' :
+                      item.status === 'found' ? 'bg-green-100 text-green-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {item.status}
+                      {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
                     </span>
                   </div>
 
