@@ -122,11 +122,14 @@ export default function NewItemPage() {
         <div className="mb-8">
           <Link
             href="/dashboard"
-            className="text-blue-600 hover:underline mb-4 inline-block"
+            className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors"
           >
-            ← Back to Dashboard
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back to Dashboard</span>
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
             Register New Item
           </h1>
           <p className="text-gray-600">
