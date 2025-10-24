@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Scan from '@/models/Scan';
 import Item from '@/models/Item';
-// Import User to register schema for populate() - DO NOT REMOVE
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import User from '@/models/User';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import type { CreateScanRequest } from '@/types';
@@ -12,6 +10,12 @@ import type { CreateScanRequest } from '@/types';
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    
+    // Ensure User model is registered for populate() to work
+    // This prevents MissingSchemaError in serverless cold starts
+    if (!User) {
+      throw new Error('User model not loaded');
+    }
 
     // Parse request body
     const body = await parseBody<CreateScanRequest>(request);
