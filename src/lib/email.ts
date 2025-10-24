@@ -1,7 +1,8 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with API key (optional for build)
+const RESEND_API_KEY = process.env.RESEND_API_KEY || 'dummy-key-for-build';
+const resend = new Resend(RESEND_API_KEY);
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const APP_NAME = 'Lost & Found Platform';
@@ -34,6 +35,12 @@ export async function sendVerificationEmail(
   name: string,
   token: string
 ) {
+  // Skip if no real API key (build time or disabled)
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'dummy-key-for-build') {
+    console.log('📧 ⚠️ Email sending skipped - RESEND_API_KEY not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
   const verifyUrl = `${APP_URL}/verify-email?token=${token}`;
   const recipientEmail = getRecipientEmail(to);
 
@@ -152,6 +159,12 @@ export async function sendPasswordResetEmail(
   name: string,
   token: string
 ) {
+  // Skip if no real API key (build time or disabled)
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'dummy-key-for-build') {
+    console.log('📧 ⚠️ Email sending skipped - RESEND_API_KEY not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
   const resetUrl = `${APP_URL}/reset-password?token=${token}`;
   const recipientEmail = getRecipientEmail(to);
 
@@ -272,6 +285,12 @@ export async function sendScanNotificationEmail(
     message?: string;
   }
 ) {
+  // Skip if no real API key (build time or disabled)
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'dummy-key-for-build') {
+    console.log('📧 ⚠️ Email sending skipped - RESEND_API_KEY not configured');
+    return { success: false, error: 'Email service not configured' };
+  }
+
   const recipientEmail = getRecipientEmail(to);
   
   try {
