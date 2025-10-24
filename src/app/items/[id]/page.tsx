@@ -243,21 +243,51 @@ export default function ItemDetailPage() {
                 </p>
                 <button
                   onClick={handleDownloadQR}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mb-6"
                 >
                   📥 Download QR Code
                 </button>
-              </div>
-            </div>
 
-            {/* Public Link */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="font-bold text-gray-900 mb-2">Public Scan Link</h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Share this link or scan the QR code to view the public page:
-              </p>
-              <div className="bg-gray-100 p-3 rounded text-sm break-all text-gray-900">
-                {typeof window !== 'undefined' && `${window.location.origin}/scan/${item.qrCode}`}
+                {/* Public Scan Link */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Public Scan Link</h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Share this link or scan the QR code to view the public page:
+                  </p>
+                  
+                  {/* Link Display with Integrated Copy Button */}
+                  <div className="relative">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 pr-12 break-all text-sm text-gray-700 font-mono">
+                      {`${typeof window !== 'undefined' ? window.location.origin : ''}/scan/${item.qrCode}`}
+                    </div>
+                    <button
+                      onClick={() => {
+                        const link = `${window.location.origin}/scan/${item.qrCode}`;
+                        navigator.clipboard.writeText(link);
+                        alert('Link copied to clipboard!');
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                      title="Copy link"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Open in New Tab Button */}
+                  <button
+                    onClick={() => {
+                      window.open(`/scan/${item.qrCode}`, '_blank');
+                    }}
+                    className="w-full mt-3 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Open Link
+                  </button>
+                </div>
               </div>
             </div>
           </div>
