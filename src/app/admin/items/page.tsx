@@ -113,16 +113,20 @@ export default function AdminItems() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">Item Management</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Item Management</h1>
               <p className="text-gray-600 mt-2">View all items across all users</p>
             </div>
             <button
               onClick={() => router.push('/admin')}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className="bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base whitespace-nowrap flex items-center gap-1.5"
             >
-              ← Back to Admin
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="hidden sm:inline">Back to Admin</span>
+              <span className="sm:hidden">Admin</span>
             </button>
           </div>
         </div>
