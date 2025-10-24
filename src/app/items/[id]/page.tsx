@@ -208,9 +208,12 @@ export default function ItemDetailPage() {
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="text-blue-600 hover:underline mb-4 inline-block cursor-pointer bg-transparent border-none"
+            className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium mb-4 transition-colors bg-transparent border-none cursor-pointer p-0"
           >
-            ← Back
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
           </button>
         </div>
 

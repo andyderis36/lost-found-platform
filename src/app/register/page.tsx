@@ -193,8 +193,14 @@ export default function RegisterPage() {
 
         {/* Back to Home */}
         <div className="mt-6 text-center">
-          <Link href="/" className="text-gray-600 hover:text-gray-900 hover:underline">
-            ← Back to Home
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back to Home</span>
           </Link>
         </div>
       </div>

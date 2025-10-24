@@ -139,18 +139,24 @@ function VerifyEmailContent() {
                 
                 <Link
                   href="/register"
-                  className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-center hover:bg-gray-200 transition-all"
+                  className="inline-flex items-center justify-center gap-1.5 w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
                 >
-                  Back to Register
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Back to Register</span>
                 </Link>
               </>
             )}
 
             <Link
               href="/"
-              className="block text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
-              ← Back to Home
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back to Home</span>
             </Link>
           </div>
         </div>
