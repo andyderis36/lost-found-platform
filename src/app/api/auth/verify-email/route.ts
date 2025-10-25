@@ -102,8 +102,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new token
-    const { generateToken, sendVerificationEmail } = await import('@/lib/email');
-    const verificationToken = generateToken();
+    const crypto = await import('crypto');
+    const { sendVerificationEmail } = await import('@/lib/email');
+    const verificationToken = crypto.default.randomBytes(32).toString('hex');
     const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Update user with new token
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
     user.verificationTokenExpires = verificationTokenExpires;
     await user.save();
 
-    // Send verification email
+    // Send verification email (pass token only, function will build URL)
     const result = await sendVerificationEmail(user.email, user.name, verificationToken);
 
     if (!result.success) {

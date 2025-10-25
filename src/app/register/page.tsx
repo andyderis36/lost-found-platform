@@ -1,13 +1,9 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { register } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -17,11 +13,13 @@ export default function RegisterPage() {
     phone: '',
   });
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
@@ -38,9 +36,26 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Use register from AuthContext - auto login after registration
-      await register(formData.name, formData.email, formData.password, formData.phone || undefined);
-      router.push('/dashboard');
+      // Register user (will send verification email)
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Show success message
+      setSuccess(true);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       setError(errorMessage);
@@ -81,7 +96,44 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {success ? (
+            /* Success Message */
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                Check Your Email!
+              </h2>
+              
+              <p className="text-gray-600 mb-6">
+                We&apos;ve sent a verification link to <strong className="text-gray-900">{formData.email}</strong>
+              </p>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  📧 Please check your inbox and click the verification link to activate your account.
+                  <br />
+                  <span className="text-xs text-blue-600">Don&apos;t forget to check your spam folder!</span>
+                </p>
+              </div>
+
+              <Link
+                href="/login"
+                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Go to Login
+              </Link>
+            </div>
+          ) : (
+            /* Registration Form */
+            <>
+            <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -189,6 +241,8 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
+            </>
+          )}
         </div>
 
         {/* Back to Home */}

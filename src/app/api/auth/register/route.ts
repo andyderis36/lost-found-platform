@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
-import { hashPassword, isValidEmail, isValidPassword, generateToken } from '@/lib/auth';
+import { hashPassword, isValidEmail, isValidPassword } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
+import { sendVerificationEmail } from '@/lib/email';
+import crypto from 'crypto';
 import type { RegisterRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -59,37 +61,43 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await hashPassword(password);
 
-    // Create new user (no email verification)
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Create new user with email verification required
     const user = await User.create({
       email: email.toLowerCase(),
       name: name.trim(),
       phone: phone?.trim(),
       passwordHash,
-      emailVerified: true, // Auto-verify for now
+      emailVerified: false, // Require verification for new users
+      verificationToken,
+      verificationTokenExpires,
     });
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user._id.toString(),
-      email: user.email,
-      role: user.role,
-    });
+    // Send verification email (pass token only, function will build URL)
+    try {
+      await sendVerificationEmail(user.email, user.name, verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Continue registration even if email fails
+    }
 
-    // Return success response with token
+    // Don't generate token yet - user needs to verify email first
+    // Return success response without token
     return NextResponse.json(
       successResponse(
         {
-          token,
           user: {
             id: user._id.toString(),
             email: user.email,
             name: user.name,
-            phone: user.phone,
-            role: user.role,
-            emailVerified: user.emailVerified,
+            emailVerified: false,
           },
+          message: 'Please check your email to verify your account before logging in.',
         },
-        'User registered successfully'
+        'Registration successful. Please verify your email.'
       ),
       { status: 201 }
     );
