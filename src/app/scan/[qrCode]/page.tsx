@@ -2,6 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface ItemData {
   id: string;
@@ -241,12 +243,13 @@ export default function ScanPage() {
               <label className="block text-gray-700 font-medium mb-2">
                 Phone Number
               </label>
-              <input
-                type="tel"
+              <PhoneInput
+                international
+                defaultCountry="ID"
                 value={formData.scannerPhone}
-                onChange={(e) => setFormData({ ...formData, scannerPhone: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="+62 812 3456 7890"
+                onChange={(value) => setFormData({ ...formData, scannerPhone: value || '' })}
+                className="phone-input w-full"
+                placeholder="Enter phone number"
               />
             </div>
 

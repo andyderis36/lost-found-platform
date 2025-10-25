@@ -24,3 +24,88 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Phone Input Styling */
+.phone-input .PhoneInputInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  color: #111827;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.phone-input .PhoneInputInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phone-input .PhoneInputCountry {
+  margin-right: 0.5rem;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: #f9fafb;
+}
+
+.phone-input .PhoneInputCountrySelect {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.25rem;
+  outline: none;
+  color: #111827;
+}
+
+.phone-input .PhoneInputCountrySelect:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.phone-input .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.phone-input .PhoneInputCountrySelectArrow {
+  margin-left: 0.25rem;
+  opacity: 0.6;
+}
+
+/* Dropdown Menu Styling */
+.PhoneInputCountrySelectDropdown {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  background: white !important;
+  margin-top: 0.25rem !important;
+}
+
+.PhoneInputCountrySelectDropdown option {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+  background: white !important;
+  cursor: pointer !important;
+}
+
+.PhoneInputCountrySelectDropdown option:hover,
+.PhoneInputCountrySelectDropdown option:focus {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.PhoneInputCountrySelectDropdown option:checked,
+.PhoneInputCountrySelectDropdown option[selected] {
+  background: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
