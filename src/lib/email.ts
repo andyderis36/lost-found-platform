@@ -48,7 +48,9 @@ export async function sendVerificationEmail(
     const { data, error } = await resend.emails.send({
       from: `${APP_NAME} <${FROM_EMAIL}>`,
       to: recipientEmail,
-      subject: 'Verify Your Email Address',
+      subject: 'Welcome! Please confirm your email',
+      replyTo: FROM_EMAIL,
+      text: `Hi ${name}!\n\nWelcome to ${APP_NAME}! We're excited to have you on board.\n\nPlease verify your email address by clicking the link below:\n\n${verifyUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create an account, you can safely ignore this email.\n\n© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.`,
       html: `
         <!DOCTYPE html>
         <html>
