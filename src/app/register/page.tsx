@@ -117,11 +117,26 @@ export default function RegisterPage() {
                 We&apos;ve sent a verification link to <strong className="text-gray-900">{formData.email}</strong>
               </p>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <p className="text-sm text-blue-800">
                   📧 Please check your inbox and click the verification link to activate your account.
                   <br />
                   <span className="text-xs text-blue-600">Don&apos;t forget to check your spam folder!</span>
+                </p>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-yellow-800 font-medium mb-2">
+                  📮 Email in Spam?
+                </p>
+                <p className="text-xs text-yellow-700">
+                  If our email landed in spam, please:
+                  <br />
+                  1. Click &quot;Not Spam&quot; or &quot;Report not spam&quot;
+                  <br />
+                  2. Move it to your Primary inbox
+                  <br />
+                  This helps improve our email delivery for everyone!
                 </p>
               </div>
 
