@@ -86,7 +86,7 @@ export default function Navbar() {
                     {user.role === 'admin' ? (
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex-shrink-0">
                         <img 
-                          src="/bear.jpg" 
+                          src="/ghost.jpg" 
                           alt={user.name}
                           className="w-full h-full object-cover"
                         />
