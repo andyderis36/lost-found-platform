@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
             email: scannerEmail,
             phone: scannerPhone,
             message: message,
+            location: location,
           }
         );
         console.log('✅ Scan notification email sent to owner');
