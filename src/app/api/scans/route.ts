@@ -4,6 +4,7 @@ import Scan from '@/models/Scan';
 import Item from '@/models/Item';
 import User from '@/models/User';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
+import { sendScanNotificationEmail } from '@/lib/email';
 import type { CreateScanRequest } from '@/types';
 
 // POST /api/scans - Log a scan (public endpoint, no auth required)
@@ -65,6 +66,27 @@ export async function POST(request: NextRequest) {
       message: message?.trim(),
       scannedAt: new Date(),
     });
+
+    // Send email notification to item owner
+    if (item.userId && item.userId.email) {
+      try {
+        await sendScanNotificationEmail(
+          item.userId.email,
+          item.userId.name || 'Owner',
+          item.name,
+          {
+            name: scannerName,
+            email: scannerEmail,
+            phone: scannerPhone,
+            message: message,
+          }
+        );
+        console.log('✅ Scan notification email sent to owner');
+      } catch (emailError) {
+        console.error('⚠️ Failed to send scan notification email:', emailError);
+        // Continue even if email fails - scan is already logged
+      }
+    }
 
     // Return success with item and owner info (hide sensitive owner data)
     return NextResponse.json(
