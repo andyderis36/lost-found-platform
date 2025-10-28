@@ -23,6 +23,7 @@ export default function AdminUsers() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'admin'>('all');
+  const [verificationFilter, setVerificationFilter] = useState<'all' | 'verified' | 'unverified'>('all');
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -37,13 +38,14 @@ export default function AdminUsers() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, roleFilter, verificationFilter]);
 
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams();
       if (roleFilter !== 'all') params.append('role', roleFilter);
+      if (verificationFilter !== 'all') params.append('verified', verificationFilter === 'verified' ? 'true' : 'false');
       if (searchQuery) params.append('search', searchQuery);
 
       const response = await fetch(`/api/admin/users?${params}`, {
@@ -71,6 +73,36 @@ export default function AdminUsers() {
   const handleSearch = () => {
     setLoading(true);
     fetchUsers();
+  };
+
+  const handleReset = async () => {
+    setSearchQuery('');
+    setRoleFilter('all');
+    setVerificationFilter('all');
+    setLoading(true);
+    
+    // Wait for state updates then fetch with reset filters
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch users');
+      }
+
+      setUsers(data.data.users || []);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load users';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (userId: string) => {
@@ -178,9 +210,10 @@ export default function AdminUsers() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search Input */}
+            <div className="sm:col-span-2 lg:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Search
               </label>
@@ -189,10 +222,12 @@ export default function AdminUsers() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search by name or email..."
+                placeholder="Name or email..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
+
+            {/* Role Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Role
@@ -201,21 +236,46 @@ export default function AdminUsers() {
                 value={roleFilter}
                 onChange={(e) => {
                   setRoleFilter(e.target.value as 'all' | 'user' | 'admin');
-                  setLoading(true);
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
-                <option value="all">All Roles</option>
-                <option value="user">Users</option>
-                <option value="admin">Admins</option>
+                <option value="all">All Role</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
-            <div className="flex items-end">
+
+            {/* Verification Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Verification
+              </label>
+              <select
+                value={verificationFilter}
+                onChange={(e) => {
+                  setVerificationFilter(e.target.value as 'all' | 'verified' | 'unverified');
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              >
+                <option value="all">All Status</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 sm:col-span-2 lg:col-span-1">
               <button
                 onClick={handleSearch}
-                className="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Search
+              </button>
+              <button
+                onClick={handleReset}
+                className="flex-1 bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+              >
+                Reset
               </button>
             </div>
           </div>
