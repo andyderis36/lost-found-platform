@@ -10,6 +10,7 @@ interface User {
   name: string;
   phone?: string;
   role: 'user' | 'admin';
+  emailVerified: boolean;
   createdAt: string;
   itemCount: number;
 }
@@ -233,7 +234,7 @@ export default function AdminUsers() {
                     Contact
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Items
@@ -262,24 +263,33 @@ export default function AdminUsers() {
                       {u.phone || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {editingUser?.id === u.id ? (
-                        <select
-                          value={editingUser.role}
-                          onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as 'user' | 'admin' })}
-                          className="text-sm border border-gray-300 rounded px-2 py-1 text-gray-900"
-                        >
-                          <option value="user">User</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      ) : (
+                      <div className="flex flex-col gap-1">
+                        {editingUser?.id === u.id ? (
+                          <select
+                            value={editingUser.role}
+                            onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as 'user' | 'admin' })}
+                            className="text-sm border border-gray-300 rounded px-2 py-1 text-gray-900"
+                          >
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            u.role === 'admin' 
+                              ? 'bg-purple-100 text-purple-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {u.role}
+                          </span>
+                        )}
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          u.role === 'admin' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-green-100 text-green-800'
+                          u.emailVerified 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {u.role}
+                          {u.emailVerified ? 'Verified' : 'Unverified'}
                         </span>
-                      )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {u.itemCount}
