@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const role = searchParams.get('role'); // Filter by role
+    const verified = searchParams.get('verified'); // Filter by verification status
     const search = searchParams.get('search'); // Search by name or email
 
     // Build query
@@ -39,6 +40,10 @@ export async function GET(request: NextRequest) {
     
     if (role) {
       query.role = role;
+    }
+
+    if (verified !== null) {
+      query.emailVerified = verified === 'true';
     }
 
     if (search) {
