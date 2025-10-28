@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import Item from '@/models/Item';
 import { successResponse, errorResponse, getUserFromRequest } from '@/lib/api';
 import { requireAdmin } from '@/lib/admin';
 
@@ -52,6 +53,18 @@ export async function GET(request: NextRequest) {
       .select('-passwordHash')
       .sort({ createdAt: -1 });
 
+    // Get item counts for all users
+    const userIds = users.map(user => user._id);
+    const itemCounts = await Item.aggregate([
+      { $match: { userId: { $in: userIds } } },
+      { $group: { _id: '$userId', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map of userId -> itemCount
+    const itemCountMap = new Map(
+      itemCounts.map(item => [item._id.toString(), item.count])
+    );
+
     // Return users
     return NextResponse.json(
       successResponse({
@@ -61,6 +74,8 @@ export async function GET(request: NextRequest) {
           name: user.name,
           phone: user.phone,
           role: user.role,
+          emailVerified: user.emailVerified,
+          itemCount: itemCountMap.get(user._id.toString()) || 0,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })),
