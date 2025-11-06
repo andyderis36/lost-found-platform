@@ -552,9 +552,12 @@ This project is created for academic purposes as part of Final Year Project (PID
 
 ## 👨‍💻 Author
 
-**SYABANA ANDYDERIS - 296530**  
-Final Year IT Student - PID154  
-UNIVERSITI UTARA MALAYSIA
+**ANDYDERIS PUTRA AJI SYABANA**  
+Matric No: 296530  
+Programme: Information Technology  
+Course: Final Year Project - STIZK3993  
+Institution: UNIVERSITI UTARA MALAYSIA  
+Project ID: PID154
 
 ## 🙏 Acknowledgments
 
