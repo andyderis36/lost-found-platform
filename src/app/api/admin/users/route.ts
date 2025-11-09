@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     await dbConnect();
 
     // Get authenticated user
-    const authUser = getUserFromRequest(request);
+    const authUser = await getUserFromRequest(request);
     if (!authUser) {
       return NextResponse.json(
         errorResponse('Unauthorized - Please login'),
@@ -58,8 +58,10 @@ export async function GET(request: NextRequest) {
       .select('-passwordHash')
       .sort({ createdAt: -1 });
 
-    // Get item counts for all users
+    // Get userIds for item count aggregation
     const userIds = users.map(user => user._id);
+
+    // Get item counts for all users
     const itemCounts = await Item.aggregate([
       { $match: { userId: { $in: userIds } } },
       { $group: { _id: '$userId', count: { $sum: 1 } } }
@@ -70,7 +72,7 @@ export async function GET(request: NextRequest) {
       itemCounts.map(item => [item._id.toString(), item.count])
     );
 
-    // Return users
+    // Return users with item counts
     return NextResponse.json(
       successResponse({
         users: users.map(user => ({
@@ -89,10 +91,10 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Get users error:', error);
+    console.error('Get users error:', error instanceof Error ? error.stack || error.message : error);
     
     return NextResponse.json(
-      errorResponse('Internal server error'),
+      errorResponse(`Internal server error: ${error instanceof Error ? error.message : String(error)}`),
       { status: 500 }
     );
   }
