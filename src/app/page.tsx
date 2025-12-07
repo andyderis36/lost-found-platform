@@ -11,6 +11,14 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/logos/logo-black.png" 
+              alt="Lost & Found Platform Logo" 
+              className="h-24 w-24 md:h-32 md:w-32 animate-pulse"
+            />
+          </div>
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
             Never Lose Your
             <span className="text-blue-600"> Valuable Items</span> Again

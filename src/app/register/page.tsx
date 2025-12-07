@@ -82,6 +82,13 @@ export default function RegisterPage() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/logos/logo-black.png" 
+              alt="Lost & Found Platform Logo" 
+              className="h-20 w-20"
+            />
+          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Create Account
           </h1>
