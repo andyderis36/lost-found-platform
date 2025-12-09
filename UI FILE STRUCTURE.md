@@ -163,5 +163,3 @@ lost-found-platform/
 | User management | `src/app/admin/users/page.tsx` |
 
 ---
-
-**Simple, right?** Ini semua file UI yang lu punya! 🎨
