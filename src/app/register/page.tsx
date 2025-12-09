@@ -78,89 +78,116 @@ export default function RegisterPage() {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden flex items-center justify-center px-4 py-12 pt-24">
+      {/* Animated Background Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '2s'}}></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '4s'}}></div>
+      </div>
+
+      <div className="max-w-md w-full relative z-10 animate-scale-in">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <img 
-              src="/logos/logo-black.png" 
-              alt="Lost & Found Platform Logo" 
-              className="h-20 w-20"
-            />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center p-3 hover-glow animate-float">
+              <img 
+                src="/logos/logo-white.png" 
+                alt="Lost & Found Platform Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 leading-tight pb-1">
             Create Account
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-600 text-lg">
             Start protecting your valuable items today
           </p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="glass p-8 rounded-3xl">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
+            <div className="glass-dark border-2 border-red-500/50 bg-red-500/10 text-red-700 px-6 py-4 rounded-2xl mb-6 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-medium">{error}</span>
+              </div>
             </div>
           )}
 
           {success ? (
             /* Success Message */
-            <div className="text-center py-8">
+            <div className="text-center py-8 animate-scale-in">
               <div className="mb-6">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center animate-float">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
               </div>
               
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">
                 Check Your Email!
               </h2>
               
-              <p className="text-gray-600 mb-6">
-                We&apos;ve sent a verification link to <strong className="text-gray-900">{formData.email}</strong>
+              <p className="text-slate-600 mb-6">
+                We&apos;ve sent a verification link to <strong className="text-slate-900">{formData.email}</strong>
               </p>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-blue-800">
-                  📧 Please check your inbox and click the verification link to activate your account.
-                  <br />
-                  <span className="text-xs text-blue-600">Don&apos;t forget to check your spam folder!</span>
-                </p>
+              <div className="glass-dark border-2 border-indigo-500/50 rounded-2xl p-5 mb-4">
+                <div className="flex items-start gap-3 text-left">
+                  <svg className="w-6 h-6 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-slate-700 font-medium">
+                      Please check your inbox and click the verification link to activate your account.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">Don&apos;t forget to check your spam folder!</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-yellow-800 font-medium mb-2">
-                  📮 Email in Spam?
-                </p>
-                <p className="text-xs text-yellow-700">
-                  If our email landed in spam, please:
-                  <br />
-                  1. Click &quot;Not Spam&quot; or &quot;Report not spam&quot;
-                  <br />
-                  2. Move it to your Primary inbox
-                  <br />
-                  This helps improve our email delivery for everyone!
-                </p>
+              <div className="glass-dark border-2 border-yellow-500/50 rounded-2xl p-5 mb-6">
+                <div className="flex items-start gap-3 text-left">
+                  <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-slate-700 font-bold mb-2">Email in Spam?</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      1. Click &quot;Not Spam&quot; or &quot;Report not spam&quot;<br />
+                      2. Move it to your Primary inbox<br />
+                      This helps improve our email delivery!
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <Link
                 href="/login"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-300"
               >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
                 Go to Login
               </Link>
             </div>
           ) : (
             /* Registration Form */
             <>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="name" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
                 Full Name
               </label>
               <input
@@ -169,14 +196,17 @@ export default function RegisterPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder-slate-400"
                 placeholder="Joni Neversleep"
               />
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
                 Email Address
               </label>
               <input
@@ -185,15 +215,18 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder-slate-400"
                 placeholder="joni_neversleep@example.com"
               />
             </div>
 
             {/* Phone Field (Optional) */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number <span className="text-gray-400 text-xs">(Optional)</span>
+              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                Phone Number <span className="text-slate-400 text-xs font-normal">(Optional)</span>
               </label>
               <PhoneInput
                 international
@@ -207,7 +240,10 @@ export default function RegisterPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
                 Password
               </label>
               <input
@@ -216,11 +252,11 @@ export default function RegisterPage() {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder-slate-400"
                 placeholder="At least 6 characters"
               />
               {formData.password && (
-                <p className={`text-sm mt-1 ${passwordStrength.color}`}>
+                <p className={`text-sm mt-2 font-medium ${passwordStrength.color}`}>
                   Strength: {passwordStrength.strength}
                 </p>
               )}
@@ -228,7 +264,10 @@ export default function RegisterPage() {
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Confirm Password
               </label>
               <input
@@ -237,7 +276,7 @@ export default function RegisterPage() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder-slate-400"
                 placeholder="Re-enter your password"
               />
             </div>
@@ -246,21 +285,33 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
+              className={`w-full py-4 px-6 rounded-xl font-bold text-white transition-all duration-300 flex items-center justify-center gap-2 mt-8 ${
                 loading
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-slate-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/50 hover:scale-[1.02]'
               }`}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  Create Account
+                </>
+              )}
             </button>
           </form>
 
           {/* Login Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
+          <div className="mt-8 text-center">
+            <p className="text-slate-600">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-600 font-semibold hover:underline">
+              <Link href="/login" className="font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:from-purple-600 hover:to-pink-600 transition-all">
                 Login here
               </Link>
             </p>
@@ -270,12 +321,12 @@ export default function RegisterPage() {
         </div>
 
         {/* Back to Home */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <Link 
             href="/" 
-            className="inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-medium transition-colors group"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             <span>Back to Home</span>
