@@ -322,7 +322,7 @@ export default function HomePage() {
               <span className="text-red-500">❤️</span> for keeping your items safe.
             </p>
             <p className="text-gray-500 text-sm">
-              ANDYDERIS PUTRA AJI SYABANA - Matric 296530
+              ANDYDERIS PUTRA AJI SYABANA - PID154
             </p>
           </div>
         </div>

@@ -241,11 +241,11 @@ export default function ItemDetailPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8 overflow-x-hidden">
           {/* Left Column - QR Code & Actions */}
           <div>
             <div className="glass p-8 rounded-3xl mb-6 animate-scale-in">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center leading-tight pb-1">
                 QR Code
               </h2>
               <div className="flex justify-center mb-6">
@@ -323,13 +323,13 @@ export default function ItemDetailPage() {
           {/* Right Column - Item Details */}
           <div className="space-y-6">
             {/* Item Information */}
-            <div className="glass p-8 rounded-3xl animate-scale-in">
-              <div className="flex justify-between items-start mb-8">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="glass p-6 sm:p-8 rounded-3xl animate-scale-in">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight pb-1 break-words max-w-full">
                   {item.name}
                 </h1>
                 {!editMode ? (
-                  <span className={`px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg ${
+                  <span className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wide shadow-lg shrink-0 ${
                     item.status === 'active' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' :
                     item.status === 'found' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
                     'glass-dark text-slate-700'
@@ -350,9 +350,9 @@ export default function ItemDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="glass-dark p-5 rounded-2xl border border-slate-200">
-                  <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="glass-dark p-4 sm:p-5 rounded-2xl border border-slate-200">
+                  <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 flex items-center gap-2 leading-tight pb-0.5">
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     Category
@@ -360,9 +360,9 @@ export default function ItemDetailPage() {
                   <p className="text-slate-900 font-semibold text-lg">{item.category}</p>
                 </div>
 
-                <div className="glass-dark p-5 rounded-2xl border border-slate-200">
-                  <h3 className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="glass-dark p-4 sm:p-5 rounded-2xl border border-slate-200">
+                  <h3 className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2 flex items-center gap-2 leading-tight pb-0.5">
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                     </svg>
                     Description
@@ -371,9 +371,9 @@ export default function ItemDetailPage() {
                 </div>
 
                 {(item.image || item.imageUrl) && (
-                  <div className="glass-dark p-5 rounded-2xl border border-slate-200">
-                    <h3 className="text-xs font-bold text-pink-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="glass-dark p-4 sm:p-5 rounded-2xl border border-slate-200">
+                    <h3 className="text-xs font-bold text-pink-600 uppercase tracking-wider mb-3 flex items-center gap-2 leading-tight pb-0.5">
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       Image
@@ -389,9 +389,9 @@ export default function ItemDetailPage() {
                 )}
 
                 {item.customFields && Object.keys(item.customFields).length > 0 && (
-                  <div className="glass-dark p-5 rounded-2xl border border-slate-200">
-                    <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="glass-dark p-4 sm:p-5 rounded-2xl border border-slate-200">
+                    <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-3 flex items-center gap-2 leading-tight pb-0.5">
+                      <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
                       Additional Details
@@ -475,9 +475,9 @@ export default function ItemDetailPage() {
             </div>
 
             {/* Scan History */}
-            <div className="glass p-8 rounded-3xl animate-scale-in">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center gap-3">
-                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="glass p-6 sm:p-8 rounded-3xl animate-scale-in">
+              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center gap-3 leading-tight pb-1">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
                 Scan History ({scans?.length || 0})
@@ -493,36 +493,36 @@ export default function ItemDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 max-w-full overflow-hidden">
                   {scans?.map((scan) => (
-                    <div key={scan.id} className="glass-dark border border-slate-200 rounded-2xl p-6 hover:border-indigo-300 transition-all duration-300 hover:shadow-lg">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-slate-900 text-lg flex items-center gap-2">
-                            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div key={scan.id} className="glass-dark border border-slate-200 rounded-2xl p-4 sm:p-6 hover:border-indigo-300 transition-all duration-300 hover:shadow-lg max-w-full">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-2 break-words">
+                            <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                             {scan.scannerName}
                           </h4>
                           {scan.scannerEmail && (
-                            <p className="text-sm text-slate-600 mt-1 flex items-center gap-2">
-                              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1 flex items-start gap-2 break-all">
+                              <svg className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                               </svg>
                               {scan.scannerEmail}
                             </p>
                           )}
                           {scan.scannerPhone && (
-                            <p className="text-sm text-slate-600 mt-1 flex items-center gap-2">
-                              <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1 flex items-center gap-2">
+                              <svg className="w-4 h-4 text-pink-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                               </svg>
                               {scan.scannerPhone}
                             </p>
                           )}
                         </div>
-                        <span className="glass px-4 py-2 rounded-lg text-xs text-slate-600 font-bold flex items-center gap-2 whitespace-nowrap">
-                          <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="glass px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs text-slate-600 font-bold flex items-center gap-2 whitespace-nowrap shrink-0">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           {new Date(scan.scannedAt).toLocaleDateString('en-US', {
@@ -534,9 +534,9 @@ export default function ItemDetailPage() {
                         </span>
                       </div>
                       {scan.location && (
-                        <div className="glass p-3 rounded-xl mb-3">
+                        <div className="glass p-3 rounded-xl mb-3 max-w-full overflow-hidden">
                           <p className="text-sm text-slate-700 font-semibold mb-1 flex items-center gap-2">
-                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
@@ -546,24 +546,24 @@ export default function ItemDetailPage() {
                             href={`https://www.google.com/maps?q=${scan.location.latitude},${scan.location.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-purple-600 font-bold hover:underline inline-flex items-center gap-2 transition-colors duration-300"
+                            className="text-indigo-600 hover:text-purple-600 font-bold hover:underline inline-flex items-start gap-2 transition-colors duration-300 break-all text-sm"
                           >
-                            {scan.location.address || `${scan.location.latitude}, ${scan.location.longitude}`}
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span className="break-all">{scan.location.address || `${scan.location.latitude}, ${scan.location.longitude}`}</span>
+                            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
                           </a>
                         </div>
                       )}
                       {scan.message && (
-                        <div className="glass p-4 rounded-xl">
-                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
-                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="glass p-3 sm:p-4 rounded-xl max-w-full overflow-hidden">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2 leading-tight pb-0.5">
+                            <svg className="w-4 h-4 text-purple-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                             </svg>
                             Message
                           </p>
-                          <p className="text-sm text-slate-700 leading-relaxed">{scan.message}</p>
+                          <p className="text-sm text-slate-700 leading-relaxed break-words">{scan.message}</p>
                         </div>
                       )}
                     </div>
