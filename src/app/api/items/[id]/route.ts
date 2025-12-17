@@ -3,8 +3,10 @@ import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { generateQRCodeDataURL } from '@/lib/qrcode';
 import { successResponse, errorResponse, getUserFromRequest, parseBody } from '@/lib/api';
+
 import type { UpdateItemRequest } from '@/types';
 import mongoose from 'mongoose';
+import { updateItemSchema } from '@/lib/validation';
 
 // GET /api/items/[id] - Get single item
 export async function GET(
@@ -111,7 +113,8 @@ export async function PUT(
       );
     }
 
-    // Parse request body
+
+    // Parse and validate request body
     const body = await parseBody<UpdateItemRequest>(request);
     if (!body) {
       return NextResponse.json(
@@ -119,6 +122,14 @@ export async function PUT(
         { status: 400 }
       );
     }
+    const parsed = updateItemSchema.safeParse(body);
+    if (!parsed.success) {
+        return NextResponse.json(
+          errorResponse('Validation error: ' + parsed.error.issues.map((e: { message: string }) => e.message).join(', ')),
+          { status: 400 }
+        );
+    }
+    const validBody = parsed.data;
 
     // Find item
     const item = await Item.findById(id);
@@ -141,35 +152,14 @@ export async function PUT(
       );
     }
 
-    // Validate category if provided
-    if (body.category) {
-      const validCategories = ['electronics', 'accessories', 'documents', 'keys', 'bags', 'jewelry', 'other'];
-      if (!validCategories.includes(body.category)) {
-        return NextResponse.json(
-          errorResponse(`Invalid category. Must be one of: ${validCategories.join(', ')}`),
-          { status: 400 }
-        );
-      }
-    }
-
-    // Validate status if provided
-    if (body.status) {
-      const validStatuses = ['active', 'lost', 'found', 'inactive'];
-      if (!validStatuses.includes(body.status)) {
-        return NextResponse.json(
-          errorResponse(`Invalid status. Must be one of: ${validStatuses.join(', ')}`),
-          { status: 400 }
-        );
-      }
-    }
 
     // Update item
-    if (body.name !== undefined) item.name = body.name.trim();
-    if (body.category !== undefined) item.category = body.category;
-    if (body.description !== undefined) item.description = body.description.trim();
-    if (body.image !== undefined) item.image = body.image;
-    if (body.customFields !== undefined) item.customFields = body.customFields;
-    if (body.status !== undefined) item.status = body.status;
+    if (validBody.name !== undefined) item.name = validBody.name.trim();
+    if (validBody.category !== undefined) item.category = validBody.category;
+    if (validBody.description !== undefined) item.description = validBody.description.trim();
+    if (validBody.image !== undefined) item.image = validBody.image;
+    if (validBody.customFields !== undefined) item.customFields = validBody.customFields;
+    if (validBody.status !== undefined) item.status = validBody.status;
 
     await item.save();
 
