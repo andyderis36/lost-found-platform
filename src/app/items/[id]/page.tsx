@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import ImageCropper from '@/components/ImageCropper';
+import { compressBase64Image } from '@/lib/imageCompression';
 
 interface Item {
   _id: string;
@@ -43,8 +45,24 @@ export default function ItemDetailPage() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [editMode, setEditMode] = useState(false);
-  const [editData, setEditData] = useState({ status: '' });
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState({ name: '', category: '', description: '', status: '' });
+  const [editCustomFields, setEditCustomFields] = useState<Array<{ id: string; key: string; value: string }>>([]);
+  const [isEditImageModalOpen, setIsEditImageModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState('');
+  const [selectedImageName, setSelectedImageName] = useState('No file chosen');
+  const [, setImageUploading] = useState(false);
+
+  const CATEGORY_OPTIONS = [
+    'Electronics',
+    'Personal Items',
+    'Bags & Luggage',
+    'Jewelry',
+    'Documents',
+    'Keys',
+    'Sports Equipment',
+    'Other',
+  ];
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -77,7 +95,19 @@ export default function ItemDetailPage() {
 
       const data = await response.json();
       setItem(data.data);
-      setEditData({ status: data.data.status });
+      setEditData({
+        name: data.data.name || '',
+        category: data.data.category || '',
+        description: data.data.description || '',
+        status: data.data.status || '',
+      });
+      // populate editCustomFields from item.customFields
+      if (data.data.customFields && typeof data.data.customFields === 'object') {
+        const entries = Object.entries(data.data.customFields as Record<string, unknown>);
+        setEditCustomFields(entries.map(([k, v], i) => ({ id: String(Date.now()) + i, key: k, value: String(v ?? '') })));
+      } else {
+        setEditCustomFields([]);
+      }
     } catch (err) {
       setError('Failed to load item details');
       console.error(err);
@@ -133,7 +163,8 @@ export default function ItemDetailPage() {
     }
   };
 
-  const handleUpdateStatus = async () => {
+  // Save full item updates from modal
+  const handleSaveItem = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/items/${itemId}`, {
@@ -142,22 +173,28 @@ export default function ItemDetailPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ status: editData.status }),
+        body: JSON.stringify({
+          name: editData.name,
+          category: editData.category,
+          description: editData.description,
+          status: editData.status,
+          customFields: editCustomFields && editCustomFields.length > 0
+            ? Object.fromEntries(editCustomFields.filter(f => f.key).map(f => [f.key, f.value]))
+            : undefined,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update item');
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.error || 'Failed to save item');
       }
 
-      // Refresh item data to show updated status
       await fetchItemDetails();
-      setEditMode(false);
-      
-      // Show success message
-      alert('Item status updated successfully!');
+      setIsEditModalOpen(false);
+      alert('Item updated successfully');
     } catch (err) {
-      alert('Failed to update item status');
       console.error(err);
+      alert('Failed to save item. See console for details.');
     }
   };
 
@@ -184,6 +221,19 @@ export default function ItemDetailPage() {
       alert('Failed to delete item');
       console.error(err);
     }
+  };
+
+  // Custom fields helpers for modal
+  const handleAddCustomField = () => {
+    setEditCustomFields(prev => [...prev, { id: String(Date.now()) + Math.random().toString(36).slice(2,7), key: '', value: '' }]);
+  };
+
+  const handleRemoveCustomField = (id: string) => {
+    setEditCustomFields(prev => prev.filter(f => f.id !== id));
+  };
+
+  const handleCustomFieldChange = (id: string, field: 'key' | 'value', value: string) => {
+    setEditCustomFields(prev => prev.map(f => f.id === id ? { ...f, [field]: value } : f));
   };
 
   if (authLoading || loading) {
@@ -328,25 +378,13 @@ export default function ItemDetailPage() {
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight pb-1 break-words max-w-full">
                   {item.name}
                 </h1>
-                {!editMode ? (
-                  <span className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wide shadow-lg shrink-0 ${
+                <span className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wide shadow-lg shrink-0 ${
                     item.status === 'active' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' :
                     item.status === 'found' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
                     'glass-dark text-slate-700'
                   }`}>
-                    {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
-                  </span>
-                ) : (
-                  <select
-                    value={editData.status}
-                    onChange={(e) => setEditData({ status: e.target.value })}
-                    className="px-4 py-2 border-2 border-indigo-300 rounded-xl text-sm text-slate-900 font-bold glass-dark focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                  >
-                    <option value="active">Lost</option>
-                    <option value="found">Found</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                )}
+                  {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
+                </span>
               </div>
 
               <div className="space-y-6">
@@ -385,6 +423,109 @@ export default function ItemDetailPage() {
                         className="w-full h-full object-cover rounded-lg shadow-xl transition-transform duration-500 hover:scale-105"
                       />
                     </div>
+
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={() => {
+                          setImageToCrop('');
+                          setIsEditImageModalOpen(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 font-bold hover:shadow-md transition-all duration-200"
+                      >
+                        Edit Image
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit Image Modal */}
+                {isEditImageModalOpen && (
+                  <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40" onClick={() => { setIsEditImageModalOpen(false); setImageToCrop(''); }} />
+                    <div className="relative z-[10001] w-full max-w-md mx-4 sm:mx-auto bg-white rounded-2xl shadow-xl p-4 sm:p-6 overflow-auto max-h-[80vh] text-slate-900">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Update Item Image</h3>
+                        <button onClick={() => { setIsEditImageModalOpen(false); setImageToCrop(''); }} className="text-slate-500 hover:text-slate-800 p-2 rounded-full">
+                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {!imageToCrop ? (
+                        <div className="space-y-4">
+                          <p className="text-sm text-slate-700">Choose an image to upload and crop to 1:1 ratio.</p>
+                          <div className="flex items-center gap-3">
+                            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                              </svg>
+                              <span className="font-semibold">Choose File</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    setSelectedImageName(file.name);
+                                    try {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const base64 = ev.target?.result as string;
+                                        setImageToCrop(base64);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    } catch (err) {
+                                      console.error('Failed to read image', err);
+                                    }
+                                  } else {
+                                    setSelectedImageName('No file chosen');
+                                  }
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                            <span className="text-sm text-slate-700 truncate">{selectedImageName}</span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-2">Supported: JPG, PNG. We will compress the image before upload.</p>
+                        </div>
+                      ) : (
+                        <ImageCropper
+                          imageSrc={imageToCrop}
+                          onCropComplete={async (croppedImage) => {
+                            try {
+                              setImageUploading(true);
+                              const compressedBase64 = await compressBase64Image(croppedImage, { maxWidth: 1000, maxHeight: 1000, quality: 0.8, maxSizeKB: 600 });
+                              const token = localStorage.getItem('token');
+                              const response = await fetch(`/api/items/${itemId}`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${token}`,
+                                },
+                                body: JSON.stringify({ image: compressedBase64 }),
+                              });
+
+                              if (!response.ok) {
+                                const err = await response.json().catch(() => null);
+                                throw new Error(err?.error || 'Failed to upload image');
+                              }
+
+                              await fetchItemDetails();
+                              setIsEditImageModalOpen(false);
+                              setImageToCrop('');
+                              alert('Image updated successfully');
+                            } catch (err) {
+                              console.error(err);
+                              alert('Failed to update image');
+                            } finally {
+                              setImageUploading(false);
+                            }
+                          }}
+                          onCancel={() => setImageToCrop('')}
+                        />
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -400,7 +541,7 @@ export default function ItemDetailPage() {
                       {Object.entries(item.customFields).map(([key, value]) => (
                         <div key={key} className="flex items-start gap-3 p-3 glass rounded-lg">
                           <span className="font-bold text-slate-700 min-w-[120px]">{key}:</span>
-                          <span className="text-slate-900 flex-1">{value}</span>
+                          <span className="text-slate-900 flex-1 break-all">{value}</span>
                         </div>
                       ))}
                     </div>
@@ -425,56 +566,157 @@ export default function ItemDetailPage() {
 
               {/* Action Buttons */}
               <div className="mt-8 flex gap-4">
-                {!editMode ? (
-                  <>
-                    <button
-                      onClick={() => setEditMode(true)}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit Status
-                    </button>
-                    <button
-                      onClick={handleDeleteItem}
-                      className="px-8 glass-dark text-red-600 rounded-xl font-bold hover:bg-red-50 hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 flex items-center justify-center gap-2 border-2 border-red-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Delete Item
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleUpdateStatus}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-green-500/50 transition-all duration-300 flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Save Changes
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditMode(false);
-                        setEditData({ status: item.status });
-                      }}
-                      className="px-8 glass-dark text-slate-700 rounded-xl font-bold hover:bg-slate-200/50 transition-all duration-300 flex items-center justify-center gap-2 border-2 border-slate-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Cancel
-                    </button>
-                  </>
-                )}
+                <>
+                  <button
+                    onClick={() => {
+                      // open edit modal and populate current values
+                      setEditData({
+                        name: item.name,
+                        category: item.category,
+                        description: item.description,
+                        status: item.status,
+                      });
+                      // populate custom fields for modal
+                      if (item.customFields && typeof item.customFields === 'object') {
+                        const entries = Object.entries(item.customFields as Record<string, unknown>);
+                        setEditCustomFields(entries.map(([k, v], i) => ({ id: String(Date.now()) + i, key: k, value: String(v ?? '') })));
+                      } else {
+                        setEditCustomFields([]);
+                      }
+                      setIsEditModalOpen(true);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit Item
+                  </button>
+                  <button
+                    onClick={handleDeleteItem}
+                    className="px-8 glass-dark text-red-600 rounded-xl font-bold hover:bg-red-50 hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300 flex items-center justify-center gap-2 border-2 border-red-200"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Item
+                  </button>
+                </>
               </div>
             </div>
 
-            {/* Scan History */}
+                {/* Edit Item Modal */}
+                {isEditModalOpen && (
+                  <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 sm:pt-16">
+                    <div className="absolute inset-0 z-[9998] bg-black/40" onClick={() => setIsEditModalOpen(false)} />
+                    <div className="relative z-[9999] w-full max-w-[min(92vw,540px)] mx-4 sm:mx-auto sm:my-8 box-border bg-white rounded-t-2xl sm:rounded-2xl shadow-xl p-3 sm:p-5 overflow-hidden max-h-[75vh] text-slate-900 flex flex-col">
+                      <div className="overflow-y-auto pr-4 sm:pr-2 space-y-3 flex-1">
+                        <div className="flex items-start justify-between mb-4">
+                          <h3 className="text-lg sm:text-xl font-bold">Edit Item</h3>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-bold text-slate-800 mb-2">Name</label>
+                          <input
+                            value={editData.name}
+                            onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-800 mb-2">Category</label>
+                          <select
+                            value={editData.category}
+                            onChange={(e) => setEditData(prev => ({ ...prev, category: e.target.value }))}
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-slate-900"
+                          >
+                            {CATEGORY_OPTIONS.map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-800 mb-2">Description</label>
+                          <textarea
+                            value={editData.description}
+                            onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
+                            rows={4}
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 resize-none text-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-800 mb-2">Status</label>
+                          <select
+                            value={editData.status}
+                            onChange={(e) => setEditData(prev => ({ ...prev, status: e.target.value }))}
+                            className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-slate-900"
+                          >
+                            <option value="active">Lost</option>
+                            <option value="found">Found</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                        </div>
+                        {/* Additional Details editor */}
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800 mb-2">Additional Details</h4>
+                          <div className="space-y-2">
+                            {editCustomFields.map(field => (
+                              <div key={field.id} className="flex flex-col sm:flex-row gap-2 items-start">
+                                <input
+                                  value={field.key}
+                                  onChange={(e) => handleCustomFieldChange(field.id, 'key', e.target.value)}
+                                  placeholder="Field name"
+                                  className="w-full sm:flex-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                                />
+                                <input
+                                  value={field.value}
+                                  onChange={(e) => handleCustomFieldChange(field.id, 'value', e.target.value)}
+                                  placeholder="Value"
+                                  className="w-full sm:flex-1 px-3 py-2 border border-slate-200 rounded-lg text-slate-900"
+                                />
+                                <button
+                                  onClick={() => handleRemoveCustomField(field.id)}
+                                  className="text-red-500 ml-0 sm:ml-1 p-2 self-stretch sm:self-auto rounded-lg"
+                                  aria-label="Remove field"
+                                >
+                                  <span className="text-lg">×</span>
+                                </button>
+                              </div>
+                            ))}
+                            <div>
+                              <button
+                                type="button"
+                                onClick={handleAddCustomField}
+                                className="mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-lg font-bold w-full sm:w-auto"
+                              >
+                                Add Field
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-none sticky bottom-0 bg-white/95 backdrop-blur-sm pt-3 sm:pt-4 px-3 sm:px-5 border-t border-slate-200">
+                        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                          <button
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-white border border-slate-200 font-bold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveItem}
+                            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scan History */}
             <div className="glass p-6 sm:p-8 rounded-3xl animate-scale-in">
               <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center gap-3 leading-tight pb-1">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

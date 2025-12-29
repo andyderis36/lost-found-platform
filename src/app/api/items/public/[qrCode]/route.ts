@@ -42,6 +42,7 @@ export async function GET(
         image: item.image,
         status: item.status,
         qrCode: item.qrCode,
+        customFields: item.customFields || {},
       }),
       { status: 200 }
     );
