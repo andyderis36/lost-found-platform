@@ -55,25 +55,29 @@ Users can register their valuable items and attach QR tags to them. When an item
 - ✅ **Plain Text Fallback** - Email compatibility for all clients
 
 ### 🎨 UI/UX
-- ✅ **Responsive Design** - Mobile-first, works on all devices
-- ✅ **Clean Interface** - Modern UI with Tailwind CSS
+- ✅ **Responsive Design** - Mobile-first, works on all devices (optimized for mobile, tablet, desktop)
+- ✅ **Clean Interface** - Modern UI with Tailwind CSS and glassmorphism design
 - ✅ **Loading States** - User feedback during operations
 - ✅ **Error Handling** - Clear error messages and validation
 - ✅ **Password Strength Indicator** - Visual feedback for password security
-- ✅ **Image Cropper** - Crop images before upload (optional)
+- ✅ **Image Cropper** - Dedicated modal for image editing with crop preview
+- ✅ **Modal-Based Editing** - Responsive item edit modal with sticky footer
+- ✅ **Styled File Input** - Custom-styled file upload button with selected file display
+- ✅ **Adaptive Scrollbars** - Smart scrollbar handling in modals to prevent collision with form fields
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Next.js 15.5.6 (App Router with Turbopack)
+- **Framework:** Next.js 15.5.6+ (App Router with Turbopack)
 - **Language:** TypeScript
 - **Database:** MongoDB Atlas + Mongoose ODM
-- **Styling:** Tailwind CSS v4
+- **Styling:** Tailwind CSS v4 with custom animations and utilities
 - **Authentication:** JWT (JSON Web Tokens) with bcryptjs
+- **Validation:** Zod for runtime schema validation (API input security)
 - **Email Service:** Resend API with custom domain (lostfoundplatform.me)
 - **DNS:** Namecheap with SPF, DKIM, DMARC records
 - **QR Code:** qrcode library + nanoid for unique IDs
 - **Phone Input:** react-phone-number-input with country codes
-- **Image Processing:** Browser-based canvas compression
+- **Image Processing:** Browser-based canvas compression + ImageCropper component
 - **Geolocation:** Browser Geolocation API with reverse geocoding
 - **Deployment:** Vercel (Production: https://www.lostfoundplatform.me/)
 
@@ -274,11 +278,12 @@ http://localhost:3000
 ## 📦 Dependencies
 
 ### Production
-- `next` (15.5.6) - React framework with App Router
+- `next` (15.5.6+) - React framework with App Router and Turbopack
 - `react` & `react-dom` (19.x) - UI library
 - `mongoose` (8.x) - MongoDB ODM
 - `bcryptjs` (2.x) - Password hashing
 - `jsonwebtoken` (9.x) - JWT authentication
+- `zod` (3.x) - Schema validation for API security
 - `qrcode` (1.x) - QR code generation
 - `nanoid` (5.x) - Unique ID generation
 - `resend` (4.x) - Email service
@@ -323,10 +328,13 @@ http://localhost:3000
 ✅ Anonymous contact form for finders  
 ✅ Phone input with country code dropdown  
 ✅ User dashboard with statistics  
-✅ Item management (create, edit, delete, status update)  
+✅ Item management with responsive modal-based editing  
+✅ Create, edit, delete items with status updates  
 ✅ Custom fields support (flexible metadata)  
+✅ Responsive item detail page (mobile-optimized)  
 ✅ Image compression (frontend canvas-based, 80-95% reduction)  
-✅ Image cropper component (optional use)  
+✅ Image cropper component with dedicated modal  
+✅ Styled file input with selected filename display  
 
 #### Phase 4: Advanced Features
 ✅ Location tracking with GPS coordinates  
@@ -353,19 +361,28 @@ http://localhost:3000
 ✅ Scan notification email templates  
 ✅ Professional HTML email design  
 ✅ Plain text email fallback  
-✅ Email deliverability optimization
+✅ Email deliverability optimization  
 
-#### Phase 6: Polish & Deployment
-✅ Responsive design (mobile-first)  
-✅ Clean UI with Tailwind CSS  
+#### Phase 6: Security & Validation
+✅ Zod runtime schema validation for all API inputs  
+✅ Type-safe API request/response handling  
+✅ Input sanitization and error prevention  
+✅ Comprehensive TypeScript type coverage
+
+#### Phase 7: Polish & Deployment
+✅ Responsive design (mobile-first, fully optimized)  
+✅ Clean UI with Tailwind CSS and custom animations  
 ✅ Loading states & error handling  
 ✅ Password strength indicators  
 ✅ Form validation feedback  
+✅ Modal-based UX for item editing with sticky buttons  
+✅ Adaptive scrollbar handling in modals  
 ✅ Deployment to Vercel  
 ✅ Custom domain setup (www.lostfoundplatform.me)  
 ✅ Production MongoDB Atlas setup  
 ✅ Environment variable management  
 ✅ Email spam prevention guidance  
+✅ Mobile-optimized item detail page  
 
 ### 🚧 Future Enhancements
 
@@ -446,6 +463,41 @@ npm start
 ```bash
 npm run lint
 ```
+
+### Development with WSL (Windows Subsystem for Linux)
+
+For optimal development experience on Windows, use WSL2 with Ubuntu:
+
+**Setup:**
+1. **Install Node.js via nvm in WSL**
+```bash
+# In WSL terminal
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 18
+nvm use 18
+```
+
+2. **Move project to WSL filesystem**
+```bash
+# Copy from Windows mount to WSL home (better performance)
+cp -a /mnt/c/Users/YourName/Desktop/lost-found-platform ~/projects/lost-found-platform
+cd ~/projects/lost-found-platform
+rm -rf node_modules
+npm install
+```
+
+3. **Open in VS Code with Remote-WSL**
+```bash
+# From WSL terminal
+code ~/projects/lost-found-platform
+```
+Or use VS Code Command Palette: "Remote-WSL: Open Folder in WSL"
+
+**Benefits:**
+- Native Linux environment for better compatibility
+- Faster file I/O operations
+- Instant file watcher updates
+- All processes run in Linux (no mount overhead)
 
 ## 📱 Usage Guide
 
