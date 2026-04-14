@@ -61,6 +61,7 @@ export default function ScanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
 
     try {
       // Try to get user's location
@@ -86,6 +87,8 @@ export default function ScanPage() {
         }
       }
 
+      console.log('Submitting scan form with data:', { qrCode, ...formData, location });
+
       const response = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,17 +99,29 @@ export default function ScanPage() {
         }),
       });
 
-      const data = await response.json();
+      console.log('Response status:', response.status, 'ok:', response.ok);
 
-      if (data.success) {
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      // Check if response is successful (status 2xx)
+      if (response.ok && data.success) {
+        console.log('✅ Form submission successful, showing success screen');
+        setSubmitting(false);
         setSubmitted(true);
       } else {
-        alert(data.error || 'Failed to submit. Please try again.');
+        console.log('❌ Form submission failed:', data);
+        setSubmitting(false);
+        const errorMsg = data.error || 'Failed to submit. Please try again.';
+        setError(errorMsg);
+        alert(errorMsg);
       }
-    } catch {
-      alert('Failed to submit. Please check your connection.');
-    } finally {
+    } catch (err) {
       setSubmitting(false);
+      const errorMsg = err instanceof Error ? err.message : 'Failed to submit. Please check your connection.';
+      console.error('❌ Form submission error:', errorMsg);
+      setError(errorMsg);
+      alert(errorMsg);
     }
   };
 
