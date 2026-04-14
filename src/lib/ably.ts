@@ -18,10 +18,7 @@ export function getAblyServer(): Ably.Realtime {
       throw new Error('ABLY_API_KEY environment variable is not set');
     }
 
-    ablyClient = new Ably.Realtime({
-      key: apiKey,
-      autoConnect: true,
-    });
+    ablyClient = new Ably.Realtime(apiKey);
   }
   return ablyClient;
 }
@@ -37,42 +34,24 @@ export async function getAblyToken(): Promise<string> {
     if (!apiKey) {
       throw new Error('ABLY_API_KEY environment variable is not set');
     }
-    
-    // Decode API key to get keyName and keySecret
-    // Format: keyName:keySecret
-    const [keyName, keySecret] = apiKey.split(':');
-    if (!keyName || !keySecret) {
-      throw new Error('ABLY_API_KEY format invalid');
-    }
-    
-    // Create Basic Auth header
-    const auth = Buffer.from(`${keyName}:${keySecret}`).toString('base64');
-    
-    // Call Ably REST API to request token
-    const response = await fetch('https://rest.ably.io/keys/' + keyName + '/requestToken', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + auth,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        clientId: 'notifications-system',
-      }),
+
+    // Use the Ably REST SDK directly with the full API key.
+    // This lets the SDK sign the token request correctly.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rest = new (Ably as any).Rest(apiKey) as Ably.Rest;
+
+    // Request a token for the browser client.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tokenDetails = await (rest.auth as any).requestToken({
+      clientId: 'notifications-system',
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Ably API error: ${response.status} - ${errorText}`);
-    }
-    
-    const tokenData = await response.json();
-    
-    if (!tokenData || !tokenData.token) {
+
+    if (!tokenDetails || !tokenDetails.token) {
       throw new Error('Failed to generate Ably token: no token in response');
     }
-    
+
     console.log('✅ Ably token generated successfully');
-    return tokenData.token;
+    return tokenDetails.token;
   } catch (error) {
     console.error('❌ Error generating Ably token:', error);
     throw new Error('Failed to generate Ably token: ' + (error instanceof Error ? error.message : String(error)));

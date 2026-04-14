@@ -17,6 +17,18 @@ import {
 } from '@/lib/rateLimiter';
 import type { CreateScanRequest } from '@/types';
 
+function formatLocation(location?: CreateScanRequest['location']): string | undefined {
+  if (!location) {
+    return undefined;
+  }
+
+  if (location.address && location.address.trim()) {
+    return location.address.trim();
+  }
+
+  return `${location.latitude}, ${location.longitude}`;
+}
+
 // POST /api/scans - Log a scan (public endpoint, no auth required)
 export async function POST(request: NextRequest) {
   try {
@@ -137,6 +149,8 @@ export async function POST(request: NextRequest) {
       scannedAt: new Date(),
     });
 
+    const locationLabel = formatLocation(location);
+
     // Send email notification to item owner
     if (item.userId && item.userId.email) {
       try {
@@ -165,7 +179,7 @@ export async function POST(request: NextRequest) {
           itemId: item._id,
           type: 'item_scanned',
           title: 'Your item was scanned',
-          message: `"${item.name}" was scanned${location ? ` at ${location}` : ''}`,
+          message: `"${item.name}" was scanned${locationLabel ? ` at ${locationLabel}` : ''}`,
           data: {
             qrCode,
             location: location || null,
@@ -182,27 +196,23 @@ export async function POST(request: NextRequest) {
         // Continue even if DB save fails - scan is already logged and email sent
       }
 
-      // Emit real-time notification via Ably
-      try {
-        await publishNotification(item.userId._id.toString(), {
-          type: 'item_scanned',
-          title: 'Your item was scanned',
-          message: `"${item.name}" was scanned${location ? ` at ${location}` : ''}`,
-          data: {
-            qrCode,
-            location: location || null,
-            scannerName: scannerName || null,
-            scannerEmail: scannerEmail || null,
-            scannerPhone: scannerPhone || null,
-            message: message || null,
-            scannedAt: new Date().toISOString(),
-          },
-        });
-        console.log('✅ Real-time notification published via Ably');
-      } catch (ablyError) {
-        console.error('⚠️ Failed to publish real-time notification:', ablyError);
-        // Continue even if Ably fails - scan is already logged and email sent
-      }
+      // Emit real-time notification via Ably (fire-and-forget - non-blocking)
+      publishNotification(item.userId._id.toString(), {
+        type: 'item_scanned',
+        title: 'Your item was scanned',
+        message: `"${item.name}" was scanned${locationLabel ? ` at ${locationLabel}` : ''}`,
+        data: {
+          qrCode,
+          location: location || null,
+          scannerName: scannerName || null,
+          scannerEmail: scannerEmail || null,
+          scannerPhone: scannerPhone || null,
+          message: message || null,
+          scannedAt: new Date().toISOString(),
+        },
+      }).catch((ablyError) => {
+        console.error('⚠️ Failed to publish real-time notification (non-blocking):', ablyError);
+      });
     }
 
     // Return success with item and owner info (hide sensitive owner data)
