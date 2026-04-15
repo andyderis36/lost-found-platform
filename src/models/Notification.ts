@@ -16,7 +16,7 @@ export interface INotification extends Document {
     scannerName?: string;
     scannerEmail?: string;
     timestamp?: Date;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   read: boolean;
   readAt?: Date;
