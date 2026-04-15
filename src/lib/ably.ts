@@ -37,11 +37,9 @@ export async function getAblyToken(): Promise<string> {
 
     // Use the Ably REST SDK directly with the full API key.
     // This lets the SDK sign the token request correctly.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rest = new (Ably as any).Rest(apiKey) as Ably.Rest;
 
     // Request a token for the browser client.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tokenDetails = await (rest.auth as any).requestToken({
       clientId: 'notifications-system',
     });
@@ -92,14 +90,12 @@ export async function publishNotification(
     const channel = client.channels.get(channelName);
 
     await new Promise<void>((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const publishChannel: any = channel;
       publishChannel.publish(
         {
           name: 'notification',
           data: notificationData,
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (err: any) => {
           if (err) {
             reject(err);
@@ -136,14 +132,12 @@ export async function publishItemScan(
     const channel = client.channels.get(channelName);
 
     await new Promise<void>((resolve, reject) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const publishChannel: any = channel;
       publishChannel.publish(
         {
           name: 'scan',
           data: scanData,
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (err: any) => {
           if (err) {
             reject(err);

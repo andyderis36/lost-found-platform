@@ -15,7 +15,10 @@ export default function Navbar() {
 
   // Prevent hydration mismatch by only rendering user-dependent content after mount
   useEffect(() => {
-    setMounted(true);
+    const animationFrame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(animationFrame);
   }, []);
 
   // Scroll detection for shadow effect
