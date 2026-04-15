@@ -12,8 +12,7 @@ interface ItemData {
   description?: string;
   image?: string;
   // optional additional details stored on the item
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  customFields?: Record<string, any>;
+  customFields?: Record<string, unknown>;
   status: string;
 }
 

@@ -4,8 +4,7 @@ import { verifyToken } from './auth';
 /**
  * Standard API response format
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
