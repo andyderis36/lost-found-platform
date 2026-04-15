@@ -3,10 +3,49 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { comparePassword, generateToken, isValidEmail } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
+import {
+  extractClientIp,
+  limitByIP,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import type { LoginRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check rate limit: 5 attempts per 15 minutes
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.AUTH_LOGIN.prefix,
+        RATE_LIMITS.AUTH_LOGIN.points,
+        RATE_LIMITS.AUTH_LOGIN.duration
+      );
+
+      if (!allowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/auth/login',
+          `Too many login attempts (${RATE_LIMITS.AUTH_LOGIN.points} attempts per ${Math.floor(RATE_LIMITS.AUTH_LOGIN.duration / 60)} min)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many login attempts. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.AUTH_LOGIN.duration.toString(),
+            },
+          }
+        );
+      }
+    }
+
     await dbConnect();
 
     // Parse request body

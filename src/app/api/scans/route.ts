@@ -3,9 +3,31 @@ import dbConnect from '@/lib/mongodb';
 import Scan from '@/models/Scan';
 import Item from '@/models/Item';
 import User from '@/models/User';
+import Notification from '@/models/Notification';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import { sendScanNotificationEmail } from '@/lib/email';
+import { publishNotification } from '@/lib/ably';
+import {
+  extractClientIp,
+  limitByIP,
+  limitByIPAndResource,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import type { CreateScanRequest } from '@/types';
+
+function formatLocation(location?: CreateScanRequest['location']): string | undefined {
+  if (!location) {
+    return undefined;
+  }
+
+  if (location.address && location.address.trim()) {
+    return location.address.trim();
+  }
+
+  return `${location.latitude}, ${location.longitude}`;
+}
 
 // POST /api/scans - Log a scan (public endpoint, no auth required)
 export async function POST(request: NextRequest) {
@@ -18,7 +40,7 @@ export async function POST(request: NextRequest) {
       throw new Error('User model not loaded');
     }
 
-    // Parse request body
+    // Parse request body early for validation
     const body = await parseBody<CreateScanRequest>(request);
     
     if (!body) {
@@ -30,6 +52,66 @@ export async function POST(request: NextRequest) {
 
     const { qrCode, scannerName, scannerEmail, scannerPhone, location, message } = body;
 
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check global per-IP limit
+      const globalAllowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.SCAN_GLOBAL.prefix,
+        RATE_LIMITS.SCAN_GLOBAL.points,
+        RATE_LIMITS.SCAN_GLOBAL.duration
+      );
+
+      if (!globalAllowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/scans',
+          'Global rate limit exceeded (100 requests/hour)',
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many scan requests from your IP. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.SCAN_GLOBAL.duration.toString(),
+            },
+          }
+        );
+      }
+
+      // Check per-(IP+qrCode) debounce to prevent spam scanning same QR code
+      const debounceAllowed = await limitByIPAndResource(
+        clientIp,
+        qrCode,
+        RATE_LIMITS.SCAN_DEBOUNCE.points,
+        RATE_LIMITS.SCAN_DEBOUNCE.duration
+      );
+
+      if (!debounceAllowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/scans',
+          `Debounce limit exceeded for QR code ${qrCode} (1 scan per ${RATE_LIMITS.SCAN_DEBOUNCE.duration}s)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse(
+            `Please wait before scanning this QR code again. Try again in ${RATE_LIMITS.SCAN_DEBOUNCE.duration} seconds.`
+          ),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.SCAN_DEBOUNCE.duration.toString(),
+            },
+          }
+        );
+      }
+    }
+    
     // Validate required field
     if (!qrCode) {
       return NextResponse.json(
@@ -67,6 +149,8 @@ export async function POST(request: NextRequest) {
       scannedAt: new Date(),
     });
 
+    const locationLabel = formatLocation(location);
+
     // Send email notification to item owner
     if (item.userId && item.userId.email) {
       try {
@@ -87,6 +171,48 @@ export async function POST(request: NextRequest) {
         console.error('⚠️ Failed to send scan notification email:', emailError);
         // Continue even if email fails - scan is already logged
       }
+
+      // Save notification to database for persistence
+      try {
+        await Notification.create({
+          userId: item.userId._id,
+          itemId: item._id,
+          type: 'item_scanned',
+          title: 'Your item was scanned',
+          message: `"${item.name}" was scanned${locationLabel ? ` at ${locationLabel}` : ''}`,
+          data: {
+            qrCode,
+            location: location || null,
+            scannerName: scannerName || null,
+            scannerEmail: scannerEmail || null,
+            scannerPhone: scannerPhone || null,
+            message: message || null,
+            scannedAt: new Date().toISOString(),
+          },
+        });
+        console.log('✅ Notification saved to database');
+      } catch (dbError) {
+        console.error('⚠️ Failed to save notification to database:', dbError);
+        // Continue even if DB save fails - scan is already logged and email sent
+      }
+
+      // Emit real-time notification via Ably (fire-and-forget - non-blocking)
+      publishNotification(item.userId._id.toString(), {
+        type: 'item_scanned',
+        title: 'Your item was scanned',
+        message: `"${item.name}" was scanned${locationLabel ? ` at ${locationLabel}` : ''}`,
+        data: {
+          qrCode,
+          location: location || null,
+          scannerName: scannerName || null,
+          scannerEmail: scannerEmail || null,
+          scannerPhone: scannerPhone || null,
+          message: message || null,
+          scannedAt: new Date().toISOString(),
+        },
+      }).catch((ablyError) => {
+        console.error('⚠️ Failed to publish real-time notification (non-blocking):', ablyError);
+      });
     }
 
     // Return success with item and owner info (hide sensitive owner data)
