@@ -1,8 +1,22 @@
+# Lost & Found Platform — PID154 Final Year Project
+
+![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+![Tailwind CSS v4](https://img.shields.io/badge/Tailwind%20CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+
 **PID154 Final Year Project** - A modern web application that helps reunite lost items with their owners through QR code technology.
 
 ## 📋 Overview
 
-Users can register their valuable items and attach QR tags to them. When an item is lost and found by someone, they can scan the QR code to contact the owner anonymously while keeping personal information secure.
+Users can register valuable items and attach QR tags. When an item is lost and found, finders can scan the QR code, share location/contact details, and notify owners securely.
+
+## 🚀 Latest Progress
+- ✅ Realtime in-app notifications implemented and integrated with Ably
+- ✅ Scan contact flow fixed with stable success state and notification delivery
+- ✅ ESLint 9 flat config migration completed for cleaner Vercel deploys
+- 🔄 Next goal: Cloud image storage integration for item photos
 
 ## ✨ Features
 
@@ -33,7 +47,14 @@ Users can register their valuable items and attach QR tags to them. When an item
 - ✅ **Email Notifications** - Automatic email alerts to owners when items scanned
 - ✅ **Action Buttons in Email** - Direct links to Google Maps and WhatsApp
 
-### 📊 Dashboard & Analytics
+### � Realtime Notifications
+- ✅ **Real-time Bell Alerts** - Owners receive notifications instantly while online
+- ✅ **Notification Center** - In-app notification drawer with unread count
+- ✅ **Notification Persistence** - Stored in MongoDB and available after refresh
+- ✅ **Secure Authenticated Channels** - Only owner receives notifications for their items
+- ✅ **Email Fallback** - Scan emails still send as backup if realtime is unavailable
+
+### �📊 Dashboard & Analytics
 - ✅ **User Dashboard** - Manage all registered items with statistics
 - ✅ **Real-time Statistics** - Track total items, active items, and scans
 - ✅ **Search & Filter** - Find items by name, status, and category
@@ -67,17 +88,17 @@ Users can register their valuable items and attach QR tags to them. When an item
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Next.js 15.5.6+ (App Router with Turbopack)
-- **Language:** TypeScript
+- **Framework:** Next.js 16.x (App Router with Turbopack)
+- **Language:** TypeScript 6
 - **Database:** MongoDB Atlas + Mongoose ODM
 - **Styling:** Tailwind CSS v4 with custom animations and utilities
-- **Authentication:** JWT (JSON Web Tokens) with bcryptjs
-- **Validation:** Zod for runtime schema validation (API input security)
+- **Authentication:** JWT with bcryptjs
+- **Validation:** Zod for runtime schema validation
+- **Realtime:** Ably for in-app notifications
 - **Email Service:** Resend API with custom domain (lostfoundplatform.me)
-- **DNS:** Namecheap with SPF, DKIM, DMARC records
-- **QR Code:** qrcode library + nanoid for unique IDs
-- **Phone Input:** react-phone-number-input with country codes
-- **Image Processing:** Browser-based canvas compression + ImageCropper component
+- **QR Code:** qrcode + nanoid for unique code generation
+- **Phone Input:** react-phone-number-input for international formats
+- **Image Processing:** Frontend compression + ImageCropper component
 - **Geolocation:** Browser Geolocation API with reverse geocoding
 - **Deployment:** Vercel (Production: https://www.lostfoundplatform.me/)
 
