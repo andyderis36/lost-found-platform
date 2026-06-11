@@ -4,10 +4,49 @@ import User from '@/models/User';
 import { isValidEmail } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import { sendPasswordResetEmail } from '@/lib/email';
+import {
+  extractClientIp,
+  limitByIP,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check rate limit: 5 attempts per 15 minutes
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.prefix,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.points,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration
+      );
+
+      if (!allowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/auth/forgot-password',
+          `Too many reset attempts (${RATE_LIMITS.AUTH_FORGOT_PASSWORD.points} attempts per ${Math.floor(RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration / 60)} min)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many password reset attempts. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration.toString(),
+            },
+          }
+        );
+      }
+    }
+
     await dbConnect();
 
     // Parse request body

@@ -4,11 +4,50 @@ import User from '@/models/User';
 import { hashPassword, isValidEmail, isValidPassword } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import { sendVerificationEmail } from '@/lib/email';
+import {
+  extractClientIp,
+  limitByIP,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import crypto from 'crypto';
 import type { RegisterRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check rate limit: 5 attempts per 15 minutes
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.AUTH_REGISTER.prefix,
+        RATE_LIMITS.AUTH_REGISTER.points,
+        RATE_LIMITS.AUTH_REGISTER.duration
+      );
+
+      if (!allowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/auth/register',
+          `Too many registration attempts (${RATE_LIMITS.AUTH_REGISTER.points} attempts per ${Math.floor(RATE_LIMITS.AUTH_REGISTER.duration / 60)} min)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many registration attempts. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.AUTH_REGISTER.duration.toString(),
+            },
+          }
+        );
+      }
+    }
+
     await dbConnect();
 
     // Parse request body

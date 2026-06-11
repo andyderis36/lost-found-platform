@@ -42,3 +42,18 @@ yarn-error.log*
 next-env.d.ts
 README.pdf
 SESSION_SUMMARY.md
+
+# local project docs and generated artifacts
+AI_AGENT_PROMPT.md
+DELIVERY_SUMMARY.md
+FEATURE_1_COMPLETE.md
+FEATURE_1_NEXT_STEPS.md
+IMPLEMENTATION_PLAN.md
+IMPLEMENTATION_QUICK_REF.md
+README_IMPLEMENTATION.md
+VERIFICATION.md
+eslint.config.mjs.bak
+test-rate-limiter.ps1
+
+# local scripts and temp files
+*.ps1
