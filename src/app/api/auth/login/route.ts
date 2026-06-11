@@ -57,6 +57,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check email verification (only for users who have emailVerified field set to false)
+    // Users with emailVerified = null or undefined are old users, allow them to login
+    if (user.emailVerified === false) {
+      return NextResponse.json(
+        errorResponse('Please verify your email before logging in. Check your inbox for the verification link.'),
+        { status: 403 }
+      );
+    }
+
     // Generate JWT token
     const token = generateToken({
       userId: user._id.toString(),

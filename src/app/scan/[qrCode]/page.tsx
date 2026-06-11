@@ -2,6 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface ItemData {
   id: string;
@@ -166,12 +168,16 @@ export default function ScanPage() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-bold text-gray-800">{item?.name}</h1>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                item?.status === 'lost' ? 'bg-red-100 text-red-800' :
+              <span className={`px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide ${
+                item?.status === 'active' ? 'bg-red-100 text-red-800' :
                 item?.status === 'found' ? 'bg-green-100 text-green-800' :
+                item?.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
                 'bg-blue-100 text-blue-800'
               }`}>
-                {item?.status.toUpperCase()}
+                {item?.status === 'active' ? 'LOST' : 
+                 item?.status === 'found' ? 'FOUND' : 
+                 item?.status === 'inactive' ? 'INACTIVE' : 
+                 item?.status.toUpperCase()}
               </span>
             </div>
             
@@ -184,9 +190,9 @@ export default function ScanPage() {
               <p className="text-gray-700 mb-4">{item.description}</p>
             )}
 
-            {item?.status === 'lost' && (
+            {item?.status === 'active' && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-red-800 font-medium">
+                <p className="text-red-800 font-bold">
                   ⚠️ This item has been reported as LOST
                 </p>
                 <p className="text-red-600 text-sm mt-1">
@@ -197,14 +203,15 @@ export default function ScanPage() {
           </div>
         </div>
 
-        {/* Contact Form */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Contact Owner</h2>
-          <p className="text-gray-600 mb-6">
-            Found this item? Fill in your details and we&apos;ll notify the owner.
-          </p>
+        {/* Contact Form - Only show if status is NOT inactive */}
+        {item?.status !== 'inactive' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Contact Owner</h2>
+            <p className="text-gray-600 mb-6">
+              Found this item? Fill in your details and we&apos;ll notify the owner.
+            </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-gray-700 font-medium mb-2">
                 Your Name *
@@ -236,12 +243,13 @@ export default function ScanPage() {
               <label className="block text-gray-700 font-medium mb-2">
                 Phone Number
               </label>
-              <input
-                type="tel"
+              <PhoneInput
+                international
+                defaultCountry="ID"
                 value={formData.scannerPhone}
-                onChange={(e) => setFormData({ ...formData, scannerPhone: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="+62 812 3456 7890"
+                onChange={(value) => setFormData({ ...formData, scannerPhone: value || '' })}
+                className="phone-input w-full"
+                placeholder="Enter phone number"
               />
             </div>
 
@@ -277,6 +285,18 @@ export default function ScanPage() {
             </p>
           </form>
         </div>
+        )}
+
+        {/* Message for inactive items */}
+        {item?.status === 'inactive' && (
+          <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 text-center">
+            <div className="text-gray-400 text-5xl mb-3">🔒</div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Item Inactive</h3>
+            <p className="text-gray-600">
+              This item has been marked as inactive. The owner is not currently accepting contact requests.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

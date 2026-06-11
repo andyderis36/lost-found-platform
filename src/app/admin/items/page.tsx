@@ -81,9 +81,9 @@ export default function AdminItems() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return 'bg-red-100 text-red-800';
       case 'found':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-green-100 text-green-800';
       case 'inactive':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -147,10 +147,10 @@ export default function AdminItems() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'found' | 'inactive')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 font-medium"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active</option>
+                <option value="active">Lost</option>
                 <option value="found">Found</option>
                 <option value="inactive">Inactive</option>
               </select>
@@ -212,8 +212,8 @@ export default function AdminItems() {
                 {/* Item Header */}
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                    {item.status}
+                  <span className={`px-2 py-1 text-xs font-bold uppercase tracking-wide rounded-full ${getStatusColor(item.status)}`}>
+                    {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
                   </span>
                 </div>
 

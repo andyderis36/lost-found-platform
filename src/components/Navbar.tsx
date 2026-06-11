@@ -83,9 +83,19 @@ export default function Navbar() {
                 
                 <div className="ml-3 pl-3 border-l border-gray-200 flex items-center gap-3">
                   <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
+                    {user.role === 'admin' ? (
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-white flex-shrink-0">
+                        <img 
+                          src="/bear.jpg" 
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="text-gray-700 font-medium text-sm hidden lg:inline">{user.name}</span>
                   </div>
                   <button
@@ -148,9 +158,19 @@ export default function Navbar() {
           ) : user ? (
             <>
               <div className="flex items-center gap-3 px-3 py-3 bg-white rounded-lg mb-3 border border-gray-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                {user.role === 'admin' ? (
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-white border-2 border-gray-200 flex-shrink-0">
+                    <img 
+                      src="/bear.jpg" 
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <p className="font-semibold text-gray-900">{user.name}</p>
                   <p className="text-xs text-gray-500">{user.email}</p>

@@ -7,6 +7,11 @@ export interface IUser extends Document {
   phone?: string;
   passwordHash: string;
   role: 'user' | 'admin';
+  emailVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpires?: Date;
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +46,24 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['user', 'admin'],
       default: 'user',
+    },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      sparse: true,
+    },
+    verificationTokenExpires: {
+      type: Date,
+    },
+    resetPasswordToken: {
+      type: String,
+      sparse: true,
+    },
+    resetPasswordExpires: {
+      type: Date,
     },
   },
   {
