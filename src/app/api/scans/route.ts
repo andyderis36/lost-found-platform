@@ -10,6 +10,12 @@ import type { CreateScanRequest } from '@/types';
 export async function POST(request: NextRequest) {
   try {
     await dbConnect();
+    
+    // Ensure User model is registered for populate() to work
+    // This prevents MissingSchemaError in serverless cold starts
+    if (!User) {
+      throw new Error('User model not loaded');
+    }
 
     // Parse request body
     const body = await parseBody<CreateScanRequest>(request);
