@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         email: user.email,
         name: user.name,
         phone: user.phone,
+        role: user.role,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       }),

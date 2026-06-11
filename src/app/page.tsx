@@ -152,10 +152,10 @@ export default function HomePage() {
       <footer className="bg-gray-800 text-white py-8 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">
-            © 2025 Lost & Found Platform. Made with ❤️ for keeping your items safe.
+            ©2025 Lost & Found Platform. Made with ❤️ for keeping your items safe.
           </p>
           <p className="text-gray-500 text-sm mt-2">
-            ANDYDERIS PAS
+            ANDYDERIS - PID154
           </p>
         </div>
       </footer>

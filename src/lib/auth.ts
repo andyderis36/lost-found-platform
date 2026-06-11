@@ -24,7 +24,7 @@ export async function comparePassword(
 /**
  * Generate a JWT token
  */
-export function generateToken(payload: { userId: string; email: string }): string {
+export function generateToken(payload: { userId: string; email: string; role?: string }): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: '7d', // Token expires in 7 days
   });
@@ -33,11 +33,12 @@ export function generateToken(payload: { userId: string; email: string }): strin
 /**
  * Verify and decode a JWT token
  */
-export function verifyToken(token: string): { userId: string; email: string } | null {
+export function verifyToken(token: string): { userId: string; email: string; role?: string } | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as {
       userId: string;
       email: string;
+      role?: string;
     };
     return decoded;
   } catch (error) {
