@@ -4,6 +4,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { compressImageClient, getBase64SizeKB } from '@/lib/imageCompression';
 
 const CATEGORIES = [
   'Electronics',
@@ -201,23 +202,36 @@ export default function NewItemPage() {
                 type="file"
                 id="image"
                 accept="image/*"
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    // Convert to base64
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      const base64String = reader.result as string;
-                      setFormData({ ...formData, image: base64String });
-                      setImagePreview(base64String);
-                    };
-                    reader.readAsDataURL(file);
+                    try {
+                      const originalSizeKB = Math.round(file.size / 1024);
+                      console.log(`Original file size: ${originalSizeKB}KB`);
+                      
+                      // Compress image before upload (max 800px, 80% quality, 500KB limit)
+                      const compressedBase64 = await compressImageClient(file, {
+                        maxWidth: 800,
+                        maxHeight: 800,
+                        quality: 0.8,
+                        maxSizeKB: 500,
+                      });
+                      
+                      const compressedSizeKB = getBase64SizeKB(compressedBase64);
+                      console.log(`Compressed size: ${compressedSizeKB}KB (${Math.round((1 - compressedSizeKB/originalSizeKB) * 100)}% reduction)`);
+                      
+                      setFormData({ ...formData, image: compressedBase64 });
+                      setImagePreview(compressedBase64);
+                    } catch (error) {
+                      console.error('Image compression failed:', error);
+                      setError('Failed to process image. Please try a different image.');
+                    }
                   }
                 }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Upload a photo of your item (JPEG, PNG, etc.)
+                Upload a photo of your item (JPEG, PNG, etc.). Images will be automatically compressed.
               </p>
               {imagePreview && (
                 <div className="mt-4">
@@ -226,6 +240,9 @@ export default function NewItemPage() {
                     alt="Preview" 
                     className="w-48 h-48 object-cover rounded-lg border border-gray-200"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Preview (compressed size: {getBase64SizeKB(imagePreview)}KB)
+                  </p>
                 </div>
               )}
             </div>

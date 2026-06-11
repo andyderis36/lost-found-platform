@@ -41,13 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 # temporary scripts (sensitive - contains database operations)
-# temp-make-admin.js
-# make-admin.ps1
-# test-auth.ps1
-# test-items.ps1
-# test-complete.ps1
+temp-make-admin.js
+make-admin.ps1
+test-auth.ps1
+test-items.ps1
+test-complete.ps1
 
-documentation files (optional - can be committed if needed)
+# documentation files (optional - can be committed if needed)
 # ROJECT_DESIGN.md
 # ARCHITECTURE.md
 # API_TESTING.md

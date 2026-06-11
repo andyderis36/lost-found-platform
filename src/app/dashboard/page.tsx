@@ -234,22 +234,24 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => (
               <div key={item.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
-                {/* Item Image or QR Code */}
-                <div className="bg-gray-50 p-6 flex items-center justify-center">
-                  {item.image ? (
+                {/* Item Image or QR Code - Square 1:1 */}
+                {item.image ? (
+                  <div className="w-full aspect-square bg-gray-100">
                     <img 
                       src={item.image} 
                       alt={item.name}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-full object-cover"
                     />
-                  ) : (
+                  </div>
+                ) : (
+                  <div className="w-full aspect-square bg-gray-50 flex items-center justify-center p-6">
                     <img 
                       src={item.qrCodeDataUrl} 
                       alt={`QR Code for ${item.name}`}
-                      className="w-40 h-40"
+                      className="max-w-full max-h-full"
                     />
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Item Details */}
                 <div className="p-6">
