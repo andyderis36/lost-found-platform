@@ -1216,10 +1216,10 @@ const passwordMinLength = 6;
 ┌──────────────┐ ┌────────────┐ ┌─────────────┐
 │   MongoDB    │ │  Resend    │ │  External   │
 │    Atlas     │ │   Email    │ │  Services   │
-│              │ │  Service   │ │             │
-│  - Database  │ │  - SMTP    │ │ - Geo API   │
-│  - Replica   │ │  - API     │ │ - Maps      │
-│    Set       │ └────────────┘ └─────────────┘
+│              │ │  - SMTP    │ │ - Geo API   │
+│  - Database  │ │  - API     │ │ - Maps      │
+│  - Replica   │ └────────────┘ └─────────────┘
+│    Set       │
 └──────────────┘
 ```
 
@@ -1518,3 +1518,48 @@ The Lost & Found Platform is a comprehensive, production-ready web application b
 ---
 
 *This document is subject to updates as the project evolves.*
+
+---
+
+## December 2025 Major Updates
+
+### UI/UX & Responsiveness
+- Redesigned all pages with modern glassmorphism (blurred, semi-transparent backgrounds, gradient accents)
+- Improved color palette: Indigo, Purple, Pink gradients for primary actions; clear status colors for lost/found/inactive
+- Fixed all text clipping issues (descenders like g, y, p no longer cut off)
+- Navbar is now fully responsive and never overlaps content (dynamic padding applied per device)
+- All cards, forms, and tables are mobile-first and scale up to desktop
+- Long item names, emails, and scan logs now wrap and never overflow or break layout
+- Scan history and item detail cards are fully responsive, with proper word-break and overflow handling
+- Button layouts and input fields are optimized for both touch and desktop
+
+### Code & Architecture
+- Upgraded to Next.js 15.5.7, React 19, Tailwind CSS v4
+- All API endpoints and UI components refactored for strict TypeScript and accessibility
+- Improved error handling and user feedback throughout the app
+- All forms use strong validation and mobile-friendly input types
+- Image uploads are compressed client-side for performance
+- QR code generation and download is seamless on all devices
+- Admin dashboard, user management, and item management are fully responsive and support large datasets
+
+### Security & Best Practices
+- All authentication flows (register, login, reset, verify) are robust and user-friendly
+- JWT tokens, password hashing, and email verification enforced
+- Role-based access control for admin/user separation
+- All user input is sanitized and validated
+- Email system (Resend API) is production-grade with custom domain and deliverability best practices
+
+### Known Issues Fixed
+- No more navbar overlap on any page (desktop, tablet, mobile)
+- No more text clipping on any heading or label
+- No more card overflow or scan log cut-off on mobile
+- All additional details and custom fields are mobile-friendly
+- All error messages are clear and actionable
+
+### Project Status
+- **Production Ready** as of December 2025
+- All major bugs and UI/UX issues resolved
+- Fully responsive, accessible, and scalable
+- See full documentation above for architecture, API, and future roadmap
+
+---

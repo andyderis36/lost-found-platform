@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
+
 import { generateQRCodeId, generateQRCodeDataURL } from '@/lib/qrcode';
 import { successResponse, errorResponse, getUserFromRequest, parseBody } from '@/lib/api';
 import { getBase64Size } from '@/lib/image';
 import type { CreateItemRequest } from '@/types';
+import { createItemSchema } from '@/lib/validation';
 
 // POST /api/items - Create new item
 export async function POST(request: NextRequest) {
@@ -29,33 +31,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, category, description, image, customFields } = body;
 
-    // Validate required fields
-    if (!name || !category) {
-      return NextResponse.json(
-        errorResponse('Name and category are required'),
-        { status: 400 }
-      );
+    // Zod validation
+    const parsed = createItemSchema.safeParse(body);
+    if (!parsed.success) {
+        return NextResponse.json(
+          errorResponse('Validation error: ' + parsed.error.issues.map((e: { message: string }) => e.message).join(', ')),
+          { status: 400 }
+        );
     }
-
-    // Validate category
-    const validCategories = [
-      'Electronics',
-      'Personal Items',
-      'Bags & Luggage',
-      'Jewelry',
-      'Documents',
-      'Keys',
-      'Sports Equipment',
-      'Other'
-    ];
-    if (!validCategories.includes(category)) {
-      return NextResponse.json(
-        errorResponse(`Invalid category. Must be one of: ${validCategories.join(', ')}`),
-        { status: 400 }
-      );
-    }
+    const { name, category, description, image, customFields } = parsed.data;
 
     // Generate unique QR code ID
     let qrCode = generateQRCodeId();

@@ -11,6 +11,9 @@ interface ItemData {
   category: string;
   description?: string;
   image?: string;
+  // optional additional details stored on the item
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customFields?: Record<string, any>;
   status: string;
 }
 
@@ -202,7 +205,7 @@ export default function ScanPage() {
         {/* Item Card */}
         <div className="glass rounded-3xl overflow-hidden mb-8 animate-scale-in">
           {item?.image && (
-            <div className="w-full max-w-md mx-auto aspect-square glass-dark p-6 m-6 rounded-2xl">
+            <div className="w-full max-w-md mx-auto aspect-square p-6 m-6 rounded-2xl">
               <img 
                 src={item.image} 
                 alt={item.name}
@@ -213,7 +216,7 @@ export default function ScanPage() {
           
           <div className="p-8">
             <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{item?.name}</h1>
+              <h1 className="text-4xl font-bold leading-normal pb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{item?.name}</h1>
               <span className={`px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg ${
                 item?.status === 'active' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' :
                 item?.status === 'found' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
@@ -236,7 +239,22 @@ export default function ScanPage() {
 
             {item?.description && (
               <div className="glass-dark p-5 rounded-2xl mb-6 border border-slate-200">
+                <h4 className="text-lg font-bold text-slate-900 mb-3">Item Description</h4>
                 <p className="text-slate-700 leading-relaxed">{item.description}</p>
+              </div>
+            )}
+
+            {item?.customFields && Object.keys(item.customFields || {}).length > 0 && (
+              <div className="glass-dark p-5 rounded-2xl mb-6 border border-slate-200">
+                <h4 className="text-lg font-bold text-slate-900 mb-3">Additional Details</h4>
+                <div className="grid gap-3">
+                  {Object.entries(item.customFields).map(([key, value]) => (
+                    <div key={key} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                      <div className="text-sm text-slate-600 font-semibold w-full sm:w-40 break-words">{key}</div>
+                      <div className="text-sm text-slate-700 flex-1 min-w-0 break-words">{String(value ?? '')}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
