@@ -4,6 +4,12 @@ import { sendVerificationEmail } from '@/lib/email';
 // Test endpoint to send verification email
 export async function GET(request: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({
+        success: false,
+        message: 'Not found',
+      }, { status: 404 });
+    }
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email') || 'test@example.com';
     const name = searchParams.get('name') || 'Test User';

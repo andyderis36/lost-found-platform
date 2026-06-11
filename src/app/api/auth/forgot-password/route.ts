@@ -4,10 +4,52 @@ import User from '@/models/User';
 import { isValidEmail } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import { sendPasswordResetEmail } from '@/lib/email';
+import {
+  extractClientIp,
+  limitByIP,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
+    let headers = {};
+
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check rate limit: 5 attempts per 15 minutes
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.prefix,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.points,
+        RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration
+      );
+
+      if (!allowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/auth/forgot-password',
+          `Too many reset attempts (${RATE_LIMITS.AUTH_FORGOT_PASSWORD.points} attempts per ${Math.floor(RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration / 60)} min)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many password reset attempts. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration.toString(),
+            },
+          }
+        );
+      }
+      headers = { 'Retry-After': RATE_LIMITS.AUTH_FORGOT_PASSWORD.duration.toString() };
+    }
+
     await dbConnect();
 
     // Parse request body
@@ -21,6 +63,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { email } = body;
+
+    // Strict type validation
+    if (typeof email !== 'string') {
+      return NextResponse.json(
+        errorResponse('Invalid input format'),
+        { status: 400, headers }
+      );
+    }
 
     // Validate required fields
     if (!email) {
@@ -50,7 +100,7 @@ export async function POST(request: NextRequest) {
           null,
           'If an account exists with that email, you will receive a password reset link shortly.'
         ),
-        { status: 200 }
+        { status: 200, headers }
       );
     }
 
@@ -74,6 +124,12 @@ export async function POST(request: NextRequest) {
 
     if (!emailResult.success) {
       console.error('Failed to send password reset email:', emailResult.error);
+      
+      // Rollback: clear the token from the database if email fails
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save();
+
       return NextResponse.json(
         errorResponse('Failed to send password reset email. Please try again later.'),
         { status: 500 }
@@ -88,7 +144,7 @@ export async function POST(request: NextRequest) {
         null,
         'If an account exists with that email, you will receive a password reset link shortly.'
       ),
-      { status: 200 }
+      { status: 200, headers }
     );
   } catch (error) {
     console.error('Forgot password error:', error);

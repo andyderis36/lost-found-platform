@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -293,9 +294,11 @@ export default function DashboardPage() {
                 {/* Item Image or QR Code - Square 1:1 */}
                 {item.image ? (
                   <div className="relative w-full aspect-square bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
-                    <img 
-                      src={item.image} 
+                    <Image
+                      src={item.image}
                       alt={item.name}
+                      width={512}
+                      height={512}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -303,11 +306,15 @@ export default function DashboardPage() {
                 ) : (
                   <div className="w-full aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-8">
                     <div className="glass-dark p-4 rounded-xl">
-                      <img 
-                        src={item.qrCodeDataUrl} 
-                        alt={`QR Code for ${item.name}`}
-                        className="max-w-full max-h-full"
-                      />
+                      {item.qrCodeDataUrl ? (
+                        <Image
+                          src={item.qrCodeDataUrl}
+                          alt={`QR Code for ${item.name}`}
+                          width={256}
+                          height={256}
+                          className="max-w-full max-h-full"
+                        />
+                      ) : null}
                     </div>
                   </div>
                 )}

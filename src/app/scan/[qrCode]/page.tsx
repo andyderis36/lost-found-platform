@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-number-input';
@@ -12,7 +13,6 @@ interface ItemData {
   description?: string;
   image?: string;
   // optional additional details stored on the item
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customFields?: Record<string, any>;
   status: string;
 }
@@ -61,52 +61,102 @@ export default function ScanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError('');
 
     try {
-      // Try to get user's location
       let location = undefined;
-      
+
       if (navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 5000,
+              timeout: 8000,
               maximumAge: 0,
-              enableHighAccuracy: true
+              enableHighAccuracy: false,
             });
           });
-          
+
           location = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
         } catch (geoError) {
-          console.log('Location access denied or unavailable:', geoError);
-          // Continue without location - it's optional
+          console.log('[SCAN FORM] Location unavailable or denied:', geoError);
         }
       }
+
+      const validName = formData.scannerName?.trim();
+      const validEmail = formData.scannerEmail?.trim();
+      const validPhone = formData.scannerPhone?.trim();
+
+      const payload = {
+        qrCode,
+        scannerName: validName || '',
+        scannerEmail: validEmail || '',
+        scannerPhone: validPhone || '',
+        message: formData.message?.trim() || '',
+        location,
+      };
+
+      console.log('[SCAN FORM] Step 1: Submitting with payload:', payload);
+
+      // Create abort controller with 30 second timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.error('[SCAN FORM] TIMEOUT: Request took > 30 seconds');
+        controller.abort();
+      }, 30000);
 
       const response = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          qrCode,
-          ...formData,
-          location,
-        }),
+        body: JSON.stringify(payload),
+        signal: controller.signal,
       });
 
-      const data = await response.json();
+      clearTimeout(timeoutId);
+      console.log('[SCAN FORM] Step 2: Got response, status:', response.status);
 
-      if (data.success) {
+      const responseText = await response.text();
+      console.log('[SCAN FORM] Step 3: Response body (raw):', responseText.substring(0, 500));
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('[SCAN FORM] Step 4: Parsed JSON - success:', data?.success, 'error:', data?.error);
+      } catch (e) {
+        console.error('[SCAN FORM] ERROR: Failed to parse JSON:', e);
+        setSubmitting(false);
+        setError('Invalid server response');
+        return;
+      }
+
+      const isSuccess = response.ok && data?.success === true;
+      console.log('[SCAN FORM] Step 5: Success check - ok:', response.ok, 'success:', data?.success, 'result:', isSuccess);
+
+      if (isSuccess) {
+        console.log('[SCAN FORM] ✅ SUCCESS! Setting submitted=true');
+        setSubmitting(false);
         setSubmitted(true);
       } else {
-        alert(data.error || 'Failed to submit. Please try again.');
+        console.log('[SCAN FORM] ❌ FAILED! Status:', response.status, 'data:', data);
+        setSubmitting(false);
+        const errorMsg = data?.error || `Server error: ${response.status}`;
+        setError(errorMsg);
       }
-    } catch {
-      alert('Failed to submit. Please check your connection.');
-    } finally {
+    } catch (err: unknown) {
+      console.error('[SCAN FORM] CATCH ERROR:', err);
       setSubmitting(false);
+      
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError('Request timeout - server took too long to respond');
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError('Network error');
+      }
     }
   };
 
@@ -146,7 +196,7 @@ export default function ScanPage() {
           <svg className="w-20 h-20 mx-auto mb-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-3">Item Not Found</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-3 break-words">Item Not Found</h1>
           <p className="text-slate-600 leading-relaxed">{error}</p>
         </div>
       </div>
@@ -194,9 +244,11 @@ export default function ScanPage() {
         {/* Logo Header */}
         <div className="flex justify-center mb-8 animate-scale-in">
           <div className="glass p-4 rounded-2xl hover-glow">
-            <img 
-              src="/logos/logo-black.png" 
-              alt="Lost & Found Platform Logo" 
+            <Image
+              src="/logos/logo-black.png"
+              alt="Lost & Found Platform Logo"
+              width={64}
+              height={64}
               className="h-16 w-16"
             />
           </div>
@@ -206,9 +258,11 @@ export default function ScanPage() {
         <div className="glass rounded-3xl overflow-hidden mb-8 animate-scale-in">
           {item?.image && (
             <div className="w-full max-w-md mx-auto aspect-square p-6 m-6 rounded-2xl">
-              <img 
-                src={item.image} 
+              <Image
+                src={item.image}
                 alt={item.name}
+                width={512}
+                height={512}
                 className="w-full h-full object-cover rounded-xl shadow-xl transition-transform duration-500 hover:scale-105"
               />
             </div>
@@ -216,8 +270,8 @@ export default function ScanPage() {
           
           <div className="p-8">
             <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-              <h1 className="text-4xl font-bold leading-normal pb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{item?.name}</h1>
-              <span className={`px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg ${
+              <h1 className="text-4xl font-bold leading-normal pb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent break-words max-w-full">{item?.name}</h1>
+              <span className={`px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg shrink-0 ${
                 item?.status === 'active' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' :
                 item?.status === 'found' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
                 item?.status === 'inactive' ? 'glass-dark text-slate-700' :
@@ -240,7 +294,7 @@ export default function ScanPage() {
             {item?.description && (
               <div className="glass-dark p-5 rounded-2xl mb-6 border border-slate-200">
                 <h4 className="text-lg font-bold text-slate-900 mb-3">Item Description</h4>
-                <p className="text-slate-700 leading-relaxed">{item.description}</p>
+                <p className="text-slate-700 leading-relaxed break-words whitespace-pre-wrap">{item.description}</p>
               </div>
             )}
 

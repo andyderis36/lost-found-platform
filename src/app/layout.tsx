@@ -19,6 +19,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Lost & Found Platform - Never Lose Your Items Again",
   description: "Register your valuable items with QR codes and get them back when lost",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  alternates: {
+    canonical: "/",
+  },
   // Icons are auto-detected from icon.png and apple-icon.png in app directory
 };
 
@@ -36,8 +40,12 @@ export default function RootLayout({
           <Navbar />
           {children}
         </AuthProvider>
-        <Analytics />
-        <SpeedInsights />
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   );

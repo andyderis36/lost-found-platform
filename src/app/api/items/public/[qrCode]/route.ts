@@ -3,6 +3,12 @@ import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { isValidQRCodeId } from '@/lib/qrcode';
 import { successResponse, errorResponse } from '@/lib/api';
+import {
+  extractClientIp,
+  limitByIP,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 
 // GET /api/items/public/[qrCode] - Get item by QR code (public, no auth)
 export async function GET(
@@ -10,6 +16,33 @@ export async function GET(
   { params }: { params: Promise<{ qrCode: string }> }
 ) {
   try {
+    let headers = {};
+
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.PUBLIC_ITEM.prefix,
+        RATE_LIMITS.PUBLIC_ITEM.points,
+        RATE_LIMITS.PUBLIC_ITEM.duration
+      );
+
+      if (!allowed) {
+        return NextResponse.json(
+          errorResponse('Too many requests. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.PUBLIC_ITEM.duration.toString(),
+            },
+          }
+        );
+      }
+      headers = { 'Retry-After': RATE_LIMITS.PUBLIC_ITEM.duration.toString() };
+    }
+
     await dbConnect();
 
     const { qrCode } = await params;
@@ -44,7 +77,7 @@ export async function GET(
         qrCode: item.qrCode,
         customFields: item.customFields || {},
       }),
-      { status: 200 }
+      { status: 200, headers }
     );
   } catch (error) {
     console.error('Get public item error:', error);

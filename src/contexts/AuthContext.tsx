@@ -23,40 +23,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user from API on mount (relying on HttpOnly cookie)
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      fetchCurrentUser(storedToken);
-    } else {
-      setLoading(false);
-    }
+    fetchCurrentUser();
   }, []);
 
-  const fetchCurrentUser = async (authToken: string) => {
+  const fetchCurrentUser = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
+      const response = await fetch('/api/auth/me');
 
       if (response.ok) {
         const data = await response.json();
         setUser(data.data);
       } else {
-        // Token invalid, clear it
-        localStorage.removeItem('token');
-        setToken(null);
+        // Cookie invalid or missing
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
-      localStorage.removeItem('token');
-      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -75,9 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || 'Login failed');
     }
 
-    const { token: newToken, user: userData } = data.data;
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
+    // Cookie is set by the browser automatically
+    const { user: userData } = data.data;
     setUser(userData);
   };
 
@@ -93,21 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!response.ok) {
       throw new Error(data.error || 'Registration failed');
     }
-
-    const { token: newToken, user: userData } = data.data;
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
-    setUser(userData);
+    
+    // In our new flow, registration doesn't log the user in directly (requires verification)
+    // but we return success for the UI
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token: null, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,15 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+function requireJwtSecret(): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET is not set. Define it in the environment before starting the server.');
+  }
+
+  return JWT_SECRET;
+}
 
 /**
  * Hash a password using bcrypt
@@ -25,7 +33,7 @@ export async function comparePassword(
  * Generate a JWT token
  */
 export function generateToken(payload: { userId: string; email: string; role?: string }): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, requireJwtSecret(), {
     expiresIn: '7d', // Token expires in 7 days
   });
 }
@@ -35,7 +43,7 @@ export function generateToken(payload: { userId: string; email: string; role?: s
  */
 export function verifyToken(token: string): { userId: string; email: string; role?: string } | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as {
+    const decoded = jwt.verify(token, requireJwtSecret()) as {
       userId: string;
       email: string;
       role?: string;
@@ -58,9 +66,8 @@ export function isValidEmail(email: string): boolean {
 
 /**
  * Validate password strength
- * At least 6 characters (simplified for better UX)
+ * Requirement: At least 8 characters
  */
 export function isValidPassword(password: string): boolean {
-  // Minimum 6 characters - simple and user-friendly
-  return password.length >= 6;
+  return password.length >= 8;
 }

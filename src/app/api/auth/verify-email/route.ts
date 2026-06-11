@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const token = searchParams.get('token');
 
-    if (!token) {
+    // Strict type validation
+    if (typeof token !== 'string' || !token) {
       return NextResponse.json(
         errorResponse('Verification token is required'),
         { status: 400 }
@@ -24,9 +25,11 @@ export async function GET(request: NextRequest) {
       verificationTokenExpires: { $gt: new Date() }, // Token not expired
     });
 
+    const genericError = 'Invalid or expired verification token';
+
     if (!user) {
       return NextResponse.json(
-        errorResponse('Invalid or expired verification token'),
+        errorResponse(genericError),
         { status: 400 }
       );
     }
@@ -63,80 +66,6 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(
       errorResponse('Failed to verify email'),
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/auth/verify-email/resend - Resend verification email
-export async function POST(request: NextRequest) {
-  try {
-    await dbConnect();
-
-    const body = await request.json();
-    const { email } = body;
-
-    if (!email) {
-      return NextResponse.json(
-        errorResponse('Email is required'),
-        { status: 400 }
-      );
-    }
-
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
-
-    if (!user) {
-      return NextResponse.json(
-        errorResponse('User not found'),
-        { status: 404 }
-      );
-    }
-
-    // Check if already verified
-    if (user.emailVerified) {
-      return NextResponse.json(
-        errorResponse('Email is already verified'),
-        { status: 400 }
-      );
-    }
-
-    // Generate new token
-    const crypto = await import('crypto');
-    const { sendVerificationEmail } = await import('@/lib/email');
-    const verificationToken = crypto.default.randomBytes(32).toString('hex');
-    const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    // Update user with new token
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpires = verificationTokenExpires;
-    await user.save();
-
-    // Send verification email (pass token only, function will build URL)
-    const result = await sendVerificationEmail(user.email, user.name, verificationToken);
-
-    if (!result.success) {
-      return NextResponse.json(
-        errorResponse('Failed to send verification email'),
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      successResponse(
-        {
-          message: 'Verification email sent',
-          email: user.email,
-        },
-        'Verification email has been sent. Please check your inbox.'
-      ),
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error('Resend verification error:', error);
-    
-    return NextResponse.json(
-      errorResponse('Failed to resend verification email'),
       { status: 500 }
     );
   }

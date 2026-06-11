@@ -37,7 +37,7 @@ export default function AdminUsers() {
         fetchUsers();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, authLoading, router, roleFilter, verificationFilter]);
 
   const fetchUsers = async () => {

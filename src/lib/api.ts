@@ -4,8 +4,7 @@ import { verifyToken } from './auth';
 /**
  * Standard API response format
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -34,11 +33,19 @@ export function errorResponse(error: string): ApiResponse {
 }
 
 /**
- * Extract user from request token
+ * Extract user from request token (Cookie or Authorization header)
  */
 export function getUserFromRequest(
   request: NextRequest
 ): { userId: string; email: string; role?: string } | null {
+  // 1. Try to get token from HttpOnly cookie (preferred)
+  const cookieToken = request.cookies.get('auth_token')?.value;
+  if (cookieToken) {
+    const user = verifyToken(cookieToken);
+    if (user) return user;
+  }
+
+  // 2. Fallback to Authorization header
   const authHeader = request.headers.get('authorization');
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

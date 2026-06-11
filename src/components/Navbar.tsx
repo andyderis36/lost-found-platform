@@ -1,9 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import NotificationCenter from './NotificationCenter';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -14,7 +16,10 @@ export default function Navbar() {
 
   // Prevent hydration mismatch by only rendering user-dependent content after mount
   useEffect(() => {
-    setMounted(true);
+    const animationFrame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(animationFrame);
   }, []);
 
   // Scroll detection for shadow effect
@@ -51,9 +56,11 @@ export default function Navbar() {
             <Link href="/" className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-                <img 
-                  src="/logos/logo-black.png" 
-                  alt="Lost & Found Platform Logo" 
+                <Image
+                  src="/logos/logo-black.png"
+                  alt="Lost & Found Platform Logo"
+                  width={40}
+                  height={40}
                   className="relative h-10 w-10 transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                 />
               </div>
@@ -103,12 +110,15 @@ export default function Navbar() {
                 </Link>
                 
                 <div className="ml-3 pl-3 border-l border-gray-200/50 flex items-center gap-3">
+                  <NotificationCenter />
                   <div className="flex items-center gap-2 px-3 py-2 glass rounded-xl hover:bg-white/60 transition-all duration-300">
                     {user.role === 'admin' ? (
                       <div className="relative w-8 h-8 rounded-full overflow-hidden bg-white flex-shrink-0 ring-2 ring-purple-500/50">
-                        <img 
-                          src="/bear.jpg" 
+                        <Image
+                          src="/bear.jpg"
                           alt={user.name}
+                          width={32}
+                          height={32}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white"></div>
@@ -183,9 +193,11 @@ export default function Navbar() {
               <div className="flex items-center gap-3 px-3 py-3 glass rounded-xl mb-3 border border-gray-200/30">
                 {user.role === 'admin' ? (
                   <div className="relative w-10 h-10 rounded-full overflow-hidden bg-white border-2 border-purple-500/50 flex-shrink-0">
-                    <img 
-                      src="/bear.jpg" 
+                    <Image
+                      src="/bear.jpg"
                       alt={user.name}
+                      width={40}
+                      height={40}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>

@@ -4,7 +4,9 @@ export const customFieldsSchema = z.record(z.string().max(64), z.union([
   z.string().max(256),
   z.number(),
   z.boolean(),
-]));
+])).refine((val) => Object.keys(val).length <= 10, {
+  message: "Maximum 10 custom fields allowed",
+});
 
 export const createItemSchema = z.object({
   name: z.string().min(1).max(100),

@@ -17,6 +17,19 @@ export function requireAdmin(user: { role?: string } | null): void {
 }
 
 /**
+ * Handle admin authorization with optional stealth mode (404 instead of 403)
+ */
+export function handleAdminAuth(user: { role?: string } | null, stealth: boolean = false): { allowed: boolean; status: number; error: string } {
+  if (!user) {
+    return { allowed: false, status: stealth ? 404 : 401, error: stealth ? 'Not Found' : 'Unauthorized' };
+  }
+  if (user.role !== 'admin') {
+    return { allowed: false, status: stealth ? 404 : 403, error: stealth ? 'Not Found' : 'Forbidden' };
+  }
+  return { allowed: true, status: 200, error: '' };
+}
+
+/**
  * Admin response with role info
  */
 export interface AdminUser {

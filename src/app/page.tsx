@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -31,9 +32,11 @@ export default function HomePage() {
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl blur-2xl opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
               <div className="relative bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-2xl">
-                <img 
-                  src="/logos/logo-black.png" 
-                  alt="Lost & Found Platform Logo" 
+                <Image
+                  src="/logos/logo-black.png"
+                  alt="Lost & Found Platform Logo"
+                  width={112}
+                  height={112}
                   className="h-20 w-20 md:h-28 md:w-28 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500"
                   style={{
                     transform: `translateY(${scrollY * 0.1}px)`
@@ -311,9 +314,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <img 
-                src="/logos/logo-black.png" 
-                alt="Lost & Found Platform Logo" 
+              <Image
+                src="/logos/logo-black.png"
+                alt="Lost & Found Platform Logo"
+                width={48}
+                height={48}
                 className="h-12 w-12 opacity-80"
               />
             </div>

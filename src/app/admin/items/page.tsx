@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,7 +41,7 @@ export default function AdminItems() {
         fetchItems();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, authLoading, router]);
 
   const fetchItems = async () => {
@@ -218,9 +219,11 @@ export default function AdminItems() {
               {/* Image Thumbnail - Square 1:1 */}
               {item.image && (
                 <div className="w-full aspect-square glass-dark p-4">
-                  <img
+                  <Image
                     src={item.image}
                     alt={item.name}
+                    width={512}
+                    height={512}
                     className="w-full h-full object-cover rounded-xl shadow-lg transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>

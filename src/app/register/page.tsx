@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
@@ -91,9 +92,11 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center p-3 hover-glow animate-float">
-              <img 
-                src="/logos/logo-white.png" 
-                alt="Lost & Found Platform Logo" 
+              <Image
+                src="/logos/logo-white.png"
+                alt="Lost & Found Platform Logo"
+                width={80}
+                height={80}
                 className="w-full h-full object-contain"
               />
             </div>

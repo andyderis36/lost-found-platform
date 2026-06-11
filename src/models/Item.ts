@@ -8,7 +8,6 @@ export interface IItem extends Document {
   category: string;
   description?: string;
   image?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customFields?: Record<string, any>;
   status: 'active' | 'lost' | 'found' | 'inactive';
   createdAt: Date;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { getBase64SizeKB, compressBase64Image } from '@/lib/imageCompression';
+import Image from 'next/image';
 import ImageCropper from '@/components/ImageCropper';
 
 const CATEGORIES = [
@@ -259,9 +260,11 @@ export default function NewItemPage() {
               {imagePreview && (
                 <div className="mt-4">
                   <div className="w-48 h-48 bg-white p-2 border border-gray-200 rounded-lg">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      width={192}
+                      height={192}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   </div>

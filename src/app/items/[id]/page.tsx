@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ImageCropper from '@/components/ImageCropper';
@@ -40,6 +41,7 @@ export default function ItemDetailPage() {
   const params = useParams();
   const itemId = params.id as string;
   const { user, loading: authLoading } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [item, setItem] = useState<Item | null>(null);
   const [scans, setScans] = useState<Scan[]>([]);
@@ -75,7 +77,7 @@ export default function ItemDetailPage() {
       fetchItemDetails();
       fetchScans();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, itemId]);
 
   const fetchItemDetails = async () => {
@@ -293,16 +295,18 @@ export default function ItemDetailPage() {
 
         <div className="grid md:grid-cols-2 gap-6 md:gap-8 overflow-x-hidden">
           {/* Left Column - QR Code & Actions */}
-          <div>
+          <div className="min-w-0">
             <div className="glass p-8 rounded-3xl mb-6 animate-scale-in">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 text-center leading-tight pb-1">
                 QR Code
               </h2>
               <div className="flex justify-center mb-6">
                 <div className="glass-dark p-6 rounded-2xl">
-                  <img 
-                    src={item.qrCodeDataUrl} 
+                  <Image
+                    src={item.qrCodeDataUrl}
                     alt={`QR Code for ${item.name}`}
+                    width={256}
+                    height={256}
                     className="w-64 h-64"
                   />
                 </div>
@@ -371,7 +375,7 @@ export default function ItemDetailPage() {
           </div>
 
           {/* Right Column - Item Details */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {/* Item Information */}
             <div className="glass p-6 sm:p-8 rounded-3xl animate-scale-in">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
@@ -405,7 +409,7 @@ export default function ItemDetailPage() {
                     </svg>
                     Description
                   </h3>
-                  <p className="text-slate-700 leading-relaxed">{item.description}</p>
+                  <p className="text-slate-700 leading-relaxed break-words whitespace-pre-wrap">{item.description}</p>
                 </div>
 
                 {(item.image || item.imageUrl) && (
@@ -417,23 +421,50 @@ export default function ItemDetailPage() {
                       Image
                     </h3>
                     <div className="max-w-md mx-auto aspect-square glass p-3 rounded-xl">
-                      <img 
-                        src={item.image || item.imageUrl} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover rounded-lg shadow-xl transition-transform duration-500 hover:scale-105"
-                      />
+                      {item.image || item.imageUrl ? (
+                        <Image
+                          src={item.image ?? item.imageUrl ?? ''}
+                          alt={item.name}
+                          width={512}
+                          height={512}
+                          className="w-full h-full object-cover rounded-lg shadow-xl transition-transform duration-500 hover:scale-105"
+                        />
+                      ) : null}
                     </div>
 
                     <div className="mt-4 flex justify-center">
                       <button
                         onClick={() => {
-                          setImageToCrop('');
-                          setIsEditImageModalOpen(true);
+                          fileInputRef.current?.click();
                         }}
                         className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 font-bold hover:shadow-md transition-all duration-200"
                       >
                         Edit Image
                       </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setSelectedImageName(file.name);
+                            try {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                const base64 = ev.target?.result as string;
+                                setImageToCrop(base64);
+                                setIsEditImageModalOpen(true);
+                              };
+                              reader.readAsDataURL(file);
+                            } catch (err) {
+                              console.error('Failed to read image', err);
+                            }
+                          }
+                          if (e.target) e.target.value = '';
+                        }}
+                      />
                     </div>
                   </div>
                 )}
@@ -607,12 +638,20 @@ export default function ItemDetailPage() {
 
                 {/* Edit Item Modal */}
                 {isEditModalOpen && (
-                  <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 sm:pt-16">
-                    <div className="absolute inset-0 z-[9998] bg-black/40" onClick={() => setIsEditModalOpen(false)} />
-                    <div className="relative z-[9999] w-full max-w-[min(92vw,540px)] mx-4 sm:mx-auto sm:my-8 box-border bg-white rounded-t-2xl sm:rounded-2xl shadow-xl p-3 sm:p-5 overflow-hidden max-h-[75vh] text-slate-900 flex flex-col">
-                      <div className="overflow-y-auto pr-4 sm:pr-2 space-y-3 flex-1">
-                        <div className="flex items-start justify-between mb-4">
-                          <h3 className="text-lg sm:text-xl font-bold">Edit Item</h3>
+                  <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                    <div className="absolute inset-0 z-[9998] bg-black/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+                    <div className="relative z-[9999] w-full max-w-xl mx-auto bg-white rounded-t-[2.5rem] sm:rounded-[2rem] shadow-2xl p-6 sm:p-8 overflow-hidden max-h-[90vh] text-slate-900 flex flex-col animate-scale-in">
+                      <div className="overflow-y-auto pr-2 space-y-6 flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Edit Item</h3>
+                          <button 
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
 
                         <div>

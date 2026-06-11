@@ -4,11 +4,53 @@ import User from '@/models/User';
 import { hashPassword, isValidEmail, isValidPassword } from '@/lib/auth';
 import { successResponse, errorResponse, parseBody } from '@/lib/api';
 import { sendVerificationEmail } from '@/lib/email';
+import {
+  extractClientIp,
+  limitByIP,
+  logBlockedAttempt,
+  isRateLimitingEnabled,
+  RATE_LIMITS,
+} from '@/lib/rateLimiter';
 import crypto from 'crypto';
 import type { RegisterRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    let headers = {};
+
+    // Apply rate limiting (if enabled)
+    if (isRateLimitingEnabled()) {
+      const clientIp = extractClientIp(request);
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Check rate limit: 5 attempts per 15 minutes
+      const allowed = await limitByIP(
+        clientIp,
+        RATE_LIMITS.AUTH_REGISTER.prefix,
+        RATE_LIMITS.AUTH_REGISTER.points,
+        RATE_LIMITS.AUTH_REGISTER.duration
+      );
+
+      if (!allowed) {
+        logBlockedAttempt(
+          clientIp,
+          '/api/auth/register',
+          `Too many registration attempts (${RATE_LIMITS.AUTH_REGISTER.points} attempts per ${Math.floor(RATE_LIMITS.AUTH_REGISTER.duration / 60)} min)`,
+          userAgent
+        );
+        return NextResponse.json(
+          errorResponse('Too many registration attempts. Please try again later.'),
+          {
+            status: 429,
+            headers: {
+              'Retry-After': RATE_LIMITS.AUTH_REGISTER.duration.toString(),
+            },
+          }
+        );
+      }
+      headers = { 'Retry-After': RATE_LIMITS.AUTH_REGISTER.duration.toString() };
+    }
+
     await dbConnect();
 
     // Parse request body
@@ -23,11 +65,24 @@ export async function POST(request: NextRequest) {
 
     const { email, name, password, phone } = body;
 
+    // Strict type validation
+    if (
+      typeof email !== 'string' ||
+      typeof name !== 'string' ||
+      typeof password !== 'string' ||
+      (phone !== undefined && typeof phone !== 'string')
+    ) {
+      return NextResponse.json(
+        errorResponse('Invalid input format'),
+        { status: 400, headers }
+      );
+    }
+
     // Validate required fields
     if (!email || !name || !password) {
       return NextResponse.json(
         errorResponse('Email, name, and password are required'),
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
@@ -35,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (!isValidEmail(email)) {
       return NextResponse.json(
         errorResponse('Invalid email format'),
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
@@ -43,18 +98,53 @@ export async function POST(request: NextRequest) {
     if (!isValidPassword(password)) {
       return NextResponse.json(
         errorResponse(
-          'Password must be at least 6 characters'
+          'Password must be at least 8 characters long.'
         ),
-        { status: 400 }
+        { status: 400, headers }
       );
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+    
+    // Generic success message for both new and existing users to prevent enumeration
+    const genericSuccessResponse = {
+      message: 'If this email is available, a verification link has been sent.',
+      user: null
+    };
+
     if (existingUser) {
+      // For existing users, we still send an email to be helpful, 
+      // but return the same success response to the API caller.
+      try {
+        const crypto = await import('crypto');
+        const { sendVerificationEmail } = await import('@/lib/email');
+        
+        if (!existingUser.emailVerified) {
+          // If not verified, send a new verification email
+          const verificationToken = crypto.randomBytes(32).toString('hex');
+          const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          
+          existingUser.verificationToken = verificationToken;
+          existingUser.verificationTokenExpires = verificationTokenExpires;
+          await existingUser.save();
+          
+          await sendVerificationEmail(existingUser.email, existingUser.name, verificationToken);
+        } else {
+          // If already verified, we could send a "you already have an account" email here
+          // For now, we just stay silent to keep it simple, or we could implement a notification.
+          // The pentest recommendation is usually to just stay silent or send a generic "already exists" email.
+        }
+      } catch (e) {
+        console.error('Error handling existing user registration:', e);
+      }
+
       return NextResponse.json(
-        errorResponse('User with this email already exists'),
-        { status: 409 }
+        successResponse(
+          genericSuccessResponse,
+          'Registration successful. Please verify your email.'
+        ),
+        { status: 201, headers }
       );
     }
 
@@ -99,7 +189,7 @@ export async function POST(request: NextRequest) {
         },
         'Registration successful. Please verify your email.'
       ),
-      { status: 201 }
+      { status: 201, headers }
     );
   } catch (error) {
     console.error('Registration error:', error);

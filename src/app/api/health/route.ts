@@ -17,7 +17,6 @@ export async function GET() {
       {
         success: false,
         error: 'Failed to connect to MongoDB',
-        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

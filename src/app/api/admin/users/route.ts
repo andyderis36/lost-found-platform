@@ -3,7 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import Item from '@/models/Item';
 import { successResponse, errorResponse, getUserFromRequest } from '@/lib/api';
-import { requireAdmin } from '@/lib/admin';
+import { handleAdminAuth } from '@/lib/admin';
 
 // GET /api/admin/users - Get all users (admin only)
 export async function GET(request: NextRequest) {
@@ -19,13 +19,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check admin role
-    try {
-      requireAdmin({ role: authUser.role });
-    } catch {
+    // Check admin role with stealth mode (return 404 instead of 403 to hide admin endpoint existence)
+    const auth = handleAdminAuth({ role: authUser.role }, true);
+    if (!auth.allowed) {
       return NextResponse.json(
-        errorResponse('Admin access required'),
-        { status: 403 }
+        errorResponse(auth.error),
+        { status: auth.status }
       );
     }
 
