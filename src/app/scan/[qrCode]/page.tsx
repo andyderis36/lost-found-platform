@@ -153,6 +153,14 @@ export default function ScanPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
+        {/* Logo Header */}
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/logos/logo-black.png" 
+            alt="Lost & Found Platform Logo" 
+            className="h-16 w-16"
+          />
+        </div>
         {/* Item Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
           {item?.image && (
