@@ -61,102 +61,52 @@ export default function ScanPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
 
     try {
+      // Try to get user's location
       let location = undefined;
-
+      
       if (navigator.geolocation) {
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 8000,
+              timeout: 5000,
               maximumAge: 0,
-              enableHighAccuracy: false,
+              enableHighAccuracy: true
             });
           });
-
+          
           location = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
         } catch (geoError) {
-          console.log('[SCAN FORM] Location unavailable or denied:', geoError);
+          console.log('Location access denied or unavailable:', geoError);
+          // Continue without location - it's optional
         }
       }
-
-      const validName = formData.scannerName?.trim();
-      const validEmail = formData.scannerEmail?.trim();
-      const validPhone = formData.scannerPhone?.trim();
-
-      const payload = {
-        qrCode,
-        scannerName: validName || '',
-        scannerEmail: validEmail || '',
-        scannerPhone: validPhone || '',
-        message: formData.message?.trim() || '',
-        location,
-      };
-
-      console.log('[SCAN FORM] Step 1: Submitting with payload:', payload);
-
-      // Create abort controller with 30 second timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.error('[SCAN FORM] TIMEOUT: Request took > 30 seconds');
-        controller.abort();
-      }, 30000);
 
       const response = await fetch('/api/scans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
+        body: JSON.stringify({
+          qrCode,
+          ...formData,
+          location,
+        }),
       });
 
-      clearTimeout(timeoutId);
-      console.log('[SCAN FORM] Step 2: Got response, status:', response.status);
+      const data = await response.json();
 
-      const responseText = await response.text();
-      console.log('[SCAN FORM] Step 3: Response body (raw):', responseText.substring(0, 500));
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('[SCAN FORM] Step 4: Parsed JSON - success:', data?.success, 'error:', data?.error);
-      } catch (e) {
-        console.error('[SCAN FORM] ERROR: Failed to parse JSON:', e);
-        setSubmitting(false);
-        setError('Invalid server response');
-        return;
-      }
-
-      const isSuccess = response.ok && data?.success === true;
-      console.log('[SCAN FORM] Step 5: Success check - ok:', response.ok, 'success:', data?.success, 'result:', isSuccess);
-
-      if (isSuccess) {
-        console.log('[SCAN FORM] ✅ SUCCESS! Setting submitted=true');
-        setSubmitting(false);
+      if (data.success) {
         setSubmitted(true);
       } else {
-        console.log('[SCAN FORM] ❌ FAILED! Status:', response.status, 'data:', data);
-        setSubmitting(false);
-        const errorMsg = data?.error || `Server error: ${response.status}`;
-        setError(errorMsg);
+        alert(data.error || 'Failed to submit. Please try again.');
       }
-    } catch (err: unknown) {
-      console.error('[SCAN FORM] CATCH ERROR:', err);
+    } catch {
+      alert('Failed to submit. Please check your connection.');
+    } finally {
       setSubmitting(false);
-      
-      if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('Request timeout - server took too long to respond');
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError('Network error');
-      }
     }
   };
 
