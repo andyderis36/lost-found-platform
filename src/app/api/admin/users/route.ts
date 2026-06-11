@@ -12,15 +12,9 @@ export async function GET(request: NextRequest) {
 
     // Get authenticated user
     const authUser = await getUserFromRequest(request);
-    if (!authUser) {
-      return NextResponse.json(
-        errorResponse('Unauthorized - Please login'),
-        { status: 401 }
-      );
-    }
 
-    // Check admin role with stealth mode (return 404 instead of 403 to hide admin endpoint existence)
-    const auth = handleAdminAuth({ role: authUser.role }, true);
+    // Check admin role with stealth mode (return 404 instead of 401/403 to hide admin endpoint existence)
+    const auth = handleAdminAuth(authUser ? { role: authUser.role } : null, true);
     if (!auth.allowed) {
       return NextResponse.json(
         errorResponse(auth.error),

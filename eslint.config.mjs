@@ -18,9 +18,9 @@ const eslintConfig = defineConfig([
       "react-hooks/immutability": "off",
       "react-hooks/set-state-in-effect": "off",
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "@typescript-eslint/no-empty-object-type": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/ban-ts-comment": "warn",
     },
   },
 ]);

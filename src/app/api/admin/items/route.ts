@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Item from '@/models/Item';
 import { successResponse, errorResponse, getUserFromRequest } from '@/lib/api';
-import { requireAdmin } from '@/lib/admin';
+import { handleAdminAuth } from '@/lib/admin';
 
 // GET /api/admin/items - Get all items from all users (admin only)
 export async function GET(request: NextRequest) {
@@ -11,20 +11,13 @@ export async function GET(request: NextRequest) {
 
     // Get authenticated user
     const authUser = getUserFromRequest(request);
-    if (!authUser) {
-      return NextResponse.json(
-        errorResponse('Unauthorized - Please login'),
-        { status: 401 }
-      );
-    }
 
-    // Check admin role
-    try {
-      requireAdmin({ role: authUser.role });
-    } catch {
+    // Check admin role with stealth mode (return 404 instead of 401/403 to hide admin endpoint existence)
+    const auth = handleAdminAuth(authUser ? { role: authUser.role } : null, true);
+    if (!auth.allowed) {
       return NextResponse.json(
-        errorResponse('Admin access required'),
-        { status: 403 }
+        errorResponse(auth.error),
+        { status: auth.status }
       );
     }
 

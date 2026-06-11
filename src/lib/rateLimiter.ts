@@ -47,14 +47,22 @@ export function extractClientIp(request: Request): string {
   // 2. Fallback to standard x-forwarded-for with validation
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    // Vercel appends proxy IPs: "client_ip, vercel_proxy1, vercel_proxy2"
-    // We filter for the first valid IP to prevent spoofing if possible, 
-    // though x-vercel-forwarded-for is much safer.
     const ips = forwarded.split(',').map(ip => ip.trim());
     
-    for (const ip of ips) {
-      if (isValidIP(ip)) {
-        return ip;
+    // In local development or self-hosted non-Vercel environments, 
+    // we take the LAST IP in the x-forwarded-for list to prevent client-controlled spoofing.
+    const isLocal = process.env.NODE_ENV === 'development' || !process.env.VERCEL;
+    if (isLocal) {
+      const lastIp = ips[ips.length - 1];
+      if (isValidIP(lastIp)) {
+        return lastIp;
+      }
+    } else {
+      // In production on other platforms, we traverse the proxy chain sequentially
+      for (const ip of ips) {
+        if (isValidIP(ip)) {
+          return ip;
+        }
       }
     }
   }

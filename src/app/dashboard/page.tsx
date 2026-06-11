@@ -6,6 +6,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertCircle, Plus, Search, Trash2, Eye, Box, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Item {
   id: string;
@@ -28,6 +37,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'found' | 'inactive'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -55,7 +67,7 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      setItems(data.data.items);
+      setItems(data.data.items || []);
     } catch (err) {
       setError('Failed to load items');
       console.error(err);
@@ -82,7 +94,6 @@ export default function DashboardPage() {
         throw new Error('Failed to delete item');
       }
 
-      // Remove from state
       setItems(items.filter(item => item.id !== itemId));
     } catch (err) {
       alert('Failed to delete item');
@@ -90,16 +101,15 @@ export default function DashboardPage() {
     }
   };
 
-  const filteredItems = filter === 'all' 
-    ? (items || [])
-    : (items || []).filter(item => item.status === filter);
-
-  if (authLoading || loading) {
+  if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-background flex flex-col pt-16">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground font-medium">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -109,284 +119,311 @@ export default function DashboardPage() {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden pt-20">
-      {/* Animated Background Blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '4s'}}></div>
-      </div>
+  const filteredItems = items
+    .filter(item => {
+      // 1. Status Filter
+      if (filter !== 'all' && item.status !== filter) return false;
+      
+      // 2. Search Query (Name/Category/Description)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = item.name.toLowerCase().includes(query);
+        const matchesCategory = item.category.toLowerCase().includes(query);
+        const matchesDesc = item.description.toLowerCase().includes(query);
+        if (!matchesName && !matchesCategory && !matchesDesc) return false;
+      }
+      
+      // 3. Time Filter
+      if (timeFilter !== 'all') {
+        const itemDate = new Date(item.createdAt);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - itemDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (timeFilter === 'today' && diffDays > 1) return false;
+        if (timeFilter === 'week' && diffDays > 7) return false;
+        if (timeFilter === 'month' && diffDays > 30) return false;
+      }
+      
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return 0;
+    });
 
+  return (
+    <div className="min-h-screen bg-muted/30 pt-16 pb-24 relative">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 leading-tight pb-1">
-            My Dashboard
-          </h1>
-          <p className="text-slate-600 text-lg">
-            Welcome back, <span className="font-semibold text-indigo-600">{user.name}</span>! Manage your registered items below.
-          </p>
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">My Dashboard</h1>
+            <p className="text-muted-foreground text-lg">
+              Welcome back, <span className="font-semibold text-foreground">{user.name}</span>! Here are your registered items.
+            </p>
+          </div>
+          <Link href="/items/new" className="hidden md:block">
+            <Button size="lg" className="gap-2 shadow-sm">
+              <Plus className="w-5 h-5" />
+              Add New Item
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="glass p-6 rounded-2xl hover-glow group cursor-pointer transition-all duration-300 animate-scale-in">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1 font-medium">Total Items</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{items?.length || 0}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div className="glass p-6 rounded-2xl hover-glow group cursor-pointer transition-all duration-300 animate-scale-in" style={{animationDelay: '0.1s'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1 font-medium">Lost Items</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">{items?.filter(i => i.status === 'active').length || 0}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div className="glass p-6 rounded-2xl hover-glow group cursor-pointer transition-all duration-300 animate-scale-in" style={{animationDelay: '0.2s'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1 font-medium">Found Items</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">{items?.filter(i => i.status === 'found').length || 0}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <div className="glass p-6 rounded-2xl hover-glow group cursor-pointer transition-all duration-300 animate-scale-in" style={{animationDelay: '0.3s'}}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-600 mb-1 font-medium">Inactive Items</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">{items?.filter(i => i.status === 'inactive').length || 0}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-500 to-gray-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Modern Filter Tabs */}
-        <div className="glass p-2 rounded-2xl mb-8 inline-flex gap-2 flex-wrap">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative ${
-              filter === 'all'
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50'
-                : 'text-slate-700 hover:bg-white/50'
-            }`}
-          >
-            All Items
-            {filter === 'all' && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
-            )}
-          </button>
-          <button
-            onClick={() => setFilter('active')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative ${
-              filter === 'active'
-                ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg shadow-red-500/50'
-                : 'text-slate-700 hover:bg-white/50'
-            }`}
-          >
-            Lost
-            {filter === 'active' && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-red-600 to-orange-600 rounded-full"></div>
-            )}
-          </button>
-          <button
-            onClick={() => setFilter('found')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative ${
-              filter === 'found'
-                ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/50'
-                : 'text-slate-700 hover:bg-white/50'
-            }`}
-          >
-            Found
-            {filter === 'found' && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full"></div>
-            )}
-          </button>
-          <button
-            onClick={() => setFilter('inactive')}
-            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative ${
-              filter === 'inactive'
-                ? 'bg-gradient-to-r from-slate-600 to-gray-600 text-white shadow-lg shadow-slate-500/50'
-                : 'text-slate-700 hover:bg-white/50'
-            }`}
-          >
-            Inactive
-            {filter === 'inactive' && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-slate-600 to-gray-600 rounded-full"></div>
-            )}
-          </button>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="glass-dark border-2 border-red-500/50 bg-red-500/10 text-red-700 px-6 py-4 rounded-2xl mb-6 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="font-medium">{error}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Items Grid */}
-        {filteredItems.length === 0 ? (
-          <div className="glass p-16 rounded-3xl text-center animate-scale-in">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
-            </div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
-              No items found
-            </h3>
-            <p className="text-slate-600 mb-6">
-              {filter === 'all' 
-                ? 'Start by adding your first item to protect it with a QR code.'
-                : `You don't have any ${filter} items yet.`
-              }
-            </p>
-            {filter === 'all' && (
-              <Link
-                href="/items/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-300"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Your First Item
-              </Link>
-            )}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[120px] rounded-xl" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item, index) => (
-              <div 
-                key={item.id} 
-                className="glass rounded-2xl overflow-hidden card-hover group animate-scale-in"
-                style={{animationDelay: `${index * 0.1}s`}}
-              >
-                {/* Item Image or QR Code - Square 1:1 */}
-                {item.image ? (
-                  <div className="relative w-full aspect-square bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={512}
-                      height={512}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </div>
-                ) : (
-                  <div className="w-full aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-8">
-                    <div className="glass-dark p-4 rounded-xl">
-                      {item.qrCodeDataUrl ? (
-                        <Image
-                          src={item.qrCodeDataUrl}
-                          alt={`QR Code for ${item.name}`}
-                          width={256}
-                          height={256}
-                          className="max-w-full max-h-full"
-                        />
-                      ) : null}
-                    </div>
-                  </div>
-                )}
-
-                {/* Item Details */}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors duration-300">
-                      {item.name}
-                    </h3>
-                    <span className={`px-3 py-1.5 text-xs font-bold rounded-full backdrop-blur-sm ${
-                      item.status === 'active' ? 'bg-red-500/20 text-red-700 ring-2 ring-red-500/50' :
-                      item.status === 'found' ? 'bg-green-500/20 text-green-700 ring-2 ring-green-500/50' :
-                      'bg-slate-500/20 text-slate-700 ring-2 ring-slate-500/50'
-                    }`}>
-                      {item.status === 'active' ? 'LOST' : item.status === 'found' ? 'FOUND' : 'INACTIVE'}
-                    </span>
-                  </div>
-
-                  <p className="text-sm font-medium text-indigo-600 mb-2">
-                    {item.category}
-                  </p>
-                  <p className="text-xs text-slate-500 mb-1 font-mono bg-slate-100 px-2 py-1 rounded inline-block">
-                    QR: {item.qrCode}
-                  </p>
-                  <p className="text-xs text-slate-500 mb-4 flex items-center gap-1 mt-2">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm text-slate-600 mb-6 line-clamp-2">
-                    {item.description}
-                  </p>
-
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <Link
-                      href={`/items/${item.id}`}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-5 py-3 rounded-xl hover:shadow-lg hover:shadow-indigo-500/50 transition-all duration-300 text-center text-sm font-bold flex items-center justify-center gap-2 group/btn"
-                    >
-                      <svg className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      View
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteItem(item.id)}
-                      className="px-5 py-3 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500 hover:text-white transition-all duration-300 text-sm font-bold backdrop-blur-sm ring-2 ring-red-500/50 flex items-center justify-center"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Items</CardTitle>
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Box className="h-4 w-4 text-primary" />
                 </div>
-              </div>
-            ))}
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{items.length}</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-l-4 border-l-destructive">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Lost Items</CardTitle>
+                <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-destructive">{items.filter(i => i.status === 'active').length}</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-l-4 border-l-green-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Found Items</CardTitle>
+                <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-green-500">{items.filter(i => i.status === 'found').length}</div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-l-4 border-l-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-muted-foreground">{items.filter(i => i.status === 'inactive').length}</div>
+              </CardContent>
+            </Card>
           </div>
         )}
-      </div>
 
-      {/* Floating Action Button */}
-      <Link
-        href="/items/new"
-        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl shadow-2xl hover:shadow-indigo-500/50 flex items-center justify-center group hover:scale-110 transition-all duration-300 z-50 animate-float"
-      >
-        <svg className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-        </svg>
-      </Link>
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Items Section */}
+        <div className="space-y-6">
+          <Tabs defaultValue="all" value={filter} onValueChange={(v) => setFilter(v as 'all' | 'active' | 'found' | 'inactive')} className="w-full">
+            <div className="flex flex-col gap-4 bg-card p-4 rounded-xl border border-border shadow-sm mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <TabsList className="inline-flex w-full lg:w-auto bg-muted border border-border/50 h-12 p-1.5 gap-1.5">
+                  <TabsTrigger 
+                    value="all" 
+                    className="flex-1 lg:flex-none py-2.5 px-5 text-xs sm:text-sm font-medium rounded-md transition-all data-active:!bg-black data-active:!text-white dark:data-active:!bg-white dark:data-active:!text-black data-active:shadow-sm"
+                  >
+                    All Items
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="active" 
+                    className="flex-1 lg:flex-none py-2.5 px-5 text-xs sm:text-sm font-medium rounded-md transition-all data-active:!bg-black data-active:!text-white dark:data-active:!bg-white dark:data-active:!text-black data-active:shadow-sm"
+                  >
+                    Lost
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="found" 
+                    className="flex-1 lg:flex-none py-2.5 px-5 text-xs sm:text-sm font-medium rounded-md transition-all data-active:!bg-black data-active:!text-white dark:data-active:!bg-white dark:data-active:!text-black data-active:shadow-sm"
+                  >
+                    Found
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="inactive" 
+                    className="flex-1 lg:flex-none py-2.5 px-5 text-xs sm:text-sm font-medium rounded-md transition-all data-active:!bg-black data-active:!text-white dark:data-active:!bg-white dark:data-active:!text-black data-active:shadow-sm"
+                  >
+                    Inactive
+                  </TabsTrigger>
+                </TabsList>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full lg:w-auto items-center">
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search items..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 h-10 w-full"
+                    />
+                  </div>
+                  
+                  <Select value={timeFilter} onValueChange={(v) => v && setTimeFilter(v as 'all' | 'today' | 'week' | 'month')}>
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue placeholder="Time Added" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="week">Past Week</SelectItem>
+                      <SelectItem value="month">Past Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={sortBy} onValueChange={(v) => v && setSortBy(v as 'name' | 'newest' | 'oldest')}>
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest First</SelectItem>
+                      <SelectItem value="oldest">Oldest First</SelectItem>
+                      <SelectItem value="name">Name (A-Z)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[420px] rounded-xl" />)}
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed bg-transparent shadow-none">
+                <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+                  <Search className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">No items found</h3>
+                <p className="text-muted-foreground mb-6 max-w-md">
+                  {filter === 'all' 
+                    ? "You haven't added any items yet. Start by adding your first item to protect it."
+                    : `You don't have any items with the "${filter}" status.`
+                  }
+                </p>
+                {filter === 'all' && (
+                  <Link href="/items/new">
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Item
+                    </Button>
+                  </Link>
+                )}
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredItems.map((item) => (
+                  <Card key={item.id} className="overflow-hidden group flex flex-col shadow-sm hover:shadow-md transition-shadow">
+                    {/* Image Area */}
+                    <div className="p-3 bg-muted/30 flex-shrink-0">
+                      <div className="relative w-full aspect-square rounded-lg overflow-hidden flex items-center justify-center">
+                        {item.image ? (
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500 w-full h-full"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center p-8 bg-background/50">
+                            <Card className="p-4 shadow-sm bg-white border-none flex items-center justify-center">
+                              {item.qrCodeDataUrl ? (
+                                <Image
+                                  src={item.qrCodeDataUrl}
+                                  alt={`QR Code`}
+                                  width={200}
+                                  height={200}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <Box className="w-16 h-16 text-muted-foreground opacity-20" />
+                              )}
+                            </Card>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Content Area */}
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-center gap-2">
+                        <CardTitle className="text-xl group-hover:text-primary transition-colors line-clamp-1 flex-1">
+                          {item.name}
+                        </CardTitle>
+                        <Badge variant={
+                          item.status === 'active' ? 'destructive' :
+                          item.status === 'found' ? 'default' : 'secondary'
+                        } className={item.status === 'found' ? 'bg-green-500 hover:bg-green-600 shrink-0' : 'shrink-0'}>
+                          {item.status.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <CardDescription className="mt-1 font-medium">{item.category}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-4 flex-1">
+                      <div className="space-y-3 text-sm">
+                        <div className="flex items-center text-muted-foreground gap-2">
+                          <Box className="w-4 h-4 shrink-0" />
+                          <code className="bg-muted px-1.5 py-0.5 rounded text-xs truncate max-w-[200px]">{item.qrCode}</code>
+                        </div>
+                        <div className="flex items-center text-muted-foreground gap-2">
+                          <Clock className="w-4 h-4 shrink-0" />
+                          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-muted-foreground line-clamp-2 mt-2">
+                          {item.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                    
+                    {/* Actions */}
+                    <CardFooter className="pt-3 gap-2">
+                      <Link href={`/items/${item.id}`} className="flex-1">
+                        <Button variant="secondary" className="w-full bg-primary/5 hover:bg-primary/15 text-primary">
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+                      </Link>
+                      <Button variant="outline" size="icon" onClick={() => handleDeleteItem(item.id)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground border-destructive/20">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Tabs>
+        </div>
+      </main>
+
+      {/* Floating Action Button for Mobile */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <Link href="/items/new">
+          <Button size="icon" className="h-14 w-14 rounded-full shadow-xl">
+            <Plus className="w-6 h-6" />
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

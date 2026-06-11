@@ -5,6 +5,14 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { SearchX, Loader2, CheckCircle2, ShieldAlert, Mail, User, Phone, Info, MapPin, Send, Lock, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ItemData {
   id: string;
@@ -12,7 +20,7 @@ interface ItemData {
   category: string;
   description?: string;
   image?: string;
-  // optional additional details stored on the item
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   customFields?: Record<string, any>;
   status: string;
 }
@@ -32,12 +40,11 @@ export default function ScanPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  // Fetch item details by QR code (public, no auth)
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        // We'll create a public endpoint for this
         const response = await fetch(`/api/items/public/${qrCode}`);
         const data = await response.json();
         
@@ -80,32 +87,22 @@ export default function ScanPage() {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
-        } catch (geoError) {
-          console.log('[SCAN FORM] Location unavailable or denied:', geoError);
+        } catch {
+          console.log('[SCAN FORM] Location unavailable or denied');
         }
       }
 
-      const validName = formData.scannerName?.trim();
-      const validEmail = formData.scannerEmail?.trim();
-      const validPhone = formData.scannerPhone?.trim();
-
       const payload = {
         qrCode,
-        scannerName: validName || '',
-        scannerEmail: validEmail || '',
-        scannerPhone: validPhone || '',
+        scannerName: formData.scannerName?.trim() || '',
+        scannerEmail: formData.scannerEmail?.trim() || '',
+        scannerPhone: formData.scannerPhone?.trim() || '',
         message: formData.message?.trim() || '',
         location,
       };
 
-      console.log('[SCAN FORM] Step 1: Submitting with payload:', payload);
-
-      // Create abort controller with 30 second timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.error('[SCAN FORM] TIMEOUT: Request took > 30 seconds');
-        controller.abort();
-      }, 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch('/api/scans', {
         method: 'POST',
@@ -115,69 +112,30 @@ export default function ScanPage() {
       });
 
       clearTimeout(timeoutId);
-      console.log('[SCAN FORM] Step 2: Got response, status:', response.status);
-
       const responseText = await response.text();
-      console.log('[SCAN FORM] Step 3: Response body (raw):', responseText.substring(0, 500));
-
       let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('[SCAN FORM] Step 4: Parsed JSON - success:', data?.success, 'error:', data?.error);
-      } catch (e) {
-        console.error('[SCAN FORM] ERROR: Failed to parse JSON:', e);
-        setSubmitting(false);
-        setError('Invalid server response');
-        return;
-      }
+      try { data = JSON.parse(responseText); } catch { throw new Error('Invalid server response'); }
 
-      const isSuccess = response.ok && data?.success === true;
-      console.log('[SCAN FORM] Step 5: Success check - ok:', response.ok, 'success:', data?.success, 'result:', isSuccess);
-
-      if (isSuccess) {
-        console.log('[SCAN FORM] ✅ SUCCESS! Setting submitted=true');
+      if (response.ok && data?.success === true) {
         setSubmitting(false);
         setSubmitted(true);
       } else {
-        console.log('[SCAN FORM] ❌ FAILED! Status:', response.status, 'data:', data);
         setSubmitting(false);
-        const errorMsg = data?.error || `Server error: ${response.status}`;
-        setError(errorMsg);
+        setError(data?.error || `Server error: ${response.status}`);
       }
-    } catch (err: unknown) {
-      console.error('[SCAN FORM] CATCH ERROR:', err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       setSubmitting(false);
-      
-      if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('Request timeout - server took too long to respond');
-        } else {
-          setError(err.message);
-        }
-      } else {
-        setError('Network error');
-      }
+      setError(err?.name === 'AbortError' ? 'Request timeout' : err.message || 'Network error');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '4s' }}></div>
-        </div>
-
-        <div className="text-center relative z-10">
-          <div className="glass p-8 rounded-3xl inline-block">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 mx-auto"></div>
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-indigo-600 border-r-purple-600 absolute top-0 left-1/2 -translate-x-1/2"></div>
-            </div>
-            <p className="mt-6 text-slate-700 font-bold text-lg">Loading item...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-500">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="text-muted-foreground font-medium text-lg">Loading item details...</p>
         </div>
       </div>
     );
@@ -185,274 +143,292 @@ export default function ScanPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="glass p-10 rounded-3xl max-w-md w-full text-center relative z-10 animate-scale-in">
-          <svg className="w-20 h-20 mx-auto mb-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-3 break-words">Item Not Found</h1>
-          <p className="text-slate-600 leading-relaxed">{error}</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <Card className="w-full max-w-md border-destructive/20 shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardContent className="pt-10 pb-8 flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
+              <SearchX className="w-10 h-10 text-destructive" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">Item Not Found</h1>
+            <p className="text-muted-foreground">{error}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="glass p-10 rounded-3xl max-w-md w-full text-center relative z-10 animate-scale-in">
-          <svg className="w-20 h-20 mx-auto mb-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3">Thank You!</h1>
-          <p className="text-slate-600 mb-6 leading-relaxed">
-            Your message has been sent to the owner. They will contact you soon!
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-green-500/50 transition-all duration-300"
-          >
-            Scan Another Item
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <Card className="w-full max-w-md border-green-500/20 shadow-lg animate-in fade-in zoom-in duration-500">
+          <CardContent className="pt-10 pb-8 flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-10 h-10 text-green-500" />
+            </div>
+            <h1 className="text-2xl font-bold mb-3">Thank You!</h1>
+            <p className="text-muted-foreground mb-8">
+              Your message has been sent. The owner will contact you soon. We appreciate your honesty!
+            </p>
+            <Button onClick={() => window.location.reload()} size="lg" className="w-full bg-green-500 hover:bg-green-600 text-white">
+              Scan Another Item
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '4s' }}></div>
-      </div>
-
-      <div className="max-w-2xl mx-auto relative z-10">
-        {/* Logo Header */}
-        <div className="flex justify-center mb-8 animate-scale-in">
-          <div className="glass p-4 rounded-2xl hover-glow">
-            <Image
-              src="/logos/logo-black.png"
-              alt="Lost & Found Platform Logo"
-              width={64}
-              height={64}
-              className="h-16 w-16"
-            />
+    <div className="min-h-screen bg-muted/30 pt-6 pb-16 px-4 flex flex-col justify-center">
+      <div className="w-full max-w-2xl md:max-w-5xl mx-auto space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        
+        {/* Logo */}
+        <div className={`flex justify-center ${item?.status !== 'inactive' ? 'md:hidden' : ''}`}>
+          <div className="relative inline-flex items-center justify-center rounded-full p-[3px] shadow-[0_0_10px_rgba(255,0,60,0.45),_0_0_10px_rgba(0,229,255,0.35)] bg-background">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#ff003c] via-[#00e5ff] to-[#ff003c] animate-[spin_2s_linear_infinite] rounded-full"></div>
+            <div className="relative bg-background rounded-full p-2 z-10 flex items-center justify-center">
+              <Image
+                src="/logos/logo-black.png"
+                alt="Platform Logo"
+                width={27}
+                height={27}
+                className="h-[27px] w-[27px] dark:invert rounded-full"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Item Card */}
-        <div className="glass rounded-3xl overflow-hidden mb-8 animate-scale-in">
-          {item?.image && (
-            <div className="w-full max-w-md mx-auto aspect-square p-6 m-6 rounded-2xl">
-              <Image
-                src={item.image}
-                alt={item.name}
-                width={512}
-                height={512}
-                className="w-full h-full object-cover rounded-xl shadow-xl transition-transform duration-500 hover:scale-105"
-              />
-            </div>
-          )}
-          
-          <div className="p-8">
-            <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-              <h1 className="text-4xl font-bold leading-normal pb-1 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent break-words max-w-full">{item?.name}</h1>
-              <span className={`px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg shrink-0 ${
-                item?.status === 'active' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' :
-                item?.status === 'found' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
-                item?.status === 'inactive' ? 'glass-dark text-slate-700' :
-                'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-              }`}>
-                {item?.status === 'active' ? 'LOST' : 
-                 item?.status === 'found' ? 'FOUND' : 
-                 item?.status === 'inactive' ? 'INACTIVE' : 
-                 item?.status.toUpperCase()}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-3 glass-dark p-4 rounded-xl mb-6 w-fit">
-              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              <span className="capitalize font-bold text-slate-700">{item?.category}</span>
-            </div>
-
-            {item?.description && (
-              <div className="glass-dark p-5 rounded-2xl mb-6 border border-slate-200">
-                <h4 className="text-lg font-bold text-slate-900 mb-3">Item Description</h4>
-                <p className="text-slate-700 leading-relaxed break-words whitespace-pre-wrap">{item.description}</p>
-              </div>
-            )}
-
-            {item?.customFields && Object.keys(item.customFields || {}).length > 0 && (
-              <div className="glass-dark p-5 rounded-2xl mb-6 border border-slate-200">
-                <h4 className="text-lg font-bold text-slate-900 mb-3">Additional Details</h4>
-                <div className="grid gap-3">
-                  {Object.entries(item.customFields).map(([key, value]) => (
-                    <div key={key} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                      <div className="text-sm text-slate-600 font-semibold w-full sm:w-40 break-words">{key}</div>
-                      <div className="text-sm text-slate-700 flex-1 min-w-0 break-words">{String(value ?? '')}</div>
-                    </div>
-                  ))}
+        <div className={`grid grid-cols-1 ${item?.status !== 'inactive' ? 'md:grid-cols-2' : 'max-w-2xl mx-auto'} gap-6 items-stretch`}>
+          {/* Item Card */}
+          <Card className="overflow-hidden shadow-md flex flex-col h-full">
+            {item?.image && (
+              <div className="p-4 bg-card pb-0 flex justify-center">
+                <div 
+                  className="w-full aspect-square md:aspect-[4/3] relative bg-muted rounded-xl overflow-hidden border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setIsPreviewOpen(true)}
+                >
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
               </div>
             )}
-
-            {item?.status === 'active' && (
-              <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-2xl p-6 shadow-lg">
-                <p className="font-bold text-lg mb-2 flex items-center gap-2">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  This item has been reported as LOST
-                </p>
-                <p className="text-white/90">
-                  If you found this item, please fill out the form below to contact the owner.
-                </p>
+            
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div>
+                  <CardTitle className="text-xl font-bold break-words">{item?.name}</CardTitle>
+                  <CardDescription className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="font-medium bg-muted/50">{item?.category}</Badge>
+                  </CardDescription>
+                </div>
+                <Badge 
+                  variant={
+                    item?.status === 'active' ? 'destructive' :
+                    item?.status === 'found' ? 'default' : 'secondary'
+                  }
+                  className={`px-4 py-1.5 text-sm uppercase tracking-wide ${item?.status === 'found' ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                >
+                  {item?.status === 'active' ? 'LOST' : 
+                   item?.status === 'found' ? 'FOUND' : 
+                   item?.status === 'inactive' ? 'INACTIVE' : item?.status}
+                </Badge>
               </div>
-            )}
-          </div>
-        </div>
+            </CardHeader>
 
-        {/* Contact Form - Only show if status is NOT inactive */}
-        {item?.status !== 'inactive' && (
-          <div className="glass p-8 rounded-3xl animate-scale-in">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">Contact Owner</h2>
-            <p className="text-slate-600 mb-8">
-              Found this item? Fill in your details and we&apos;ll notify the owner.
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-slate-700 font-bold mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                Your Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.scannerName}
-                onChange={(e) => setFormData({ ...formData, scannerName: e.target.value })}
-                className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 glass-dark transition-all duration-300"
-                placeholder="Enter your name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.scannerEmail}
-                onChange={(e) => setFormData({ ...formData, scannerEmail: e.target.value })}
-                className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 glass-dark transition-all duration-300"
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Phone Number
-              </label>
-              <PhoneInput
-                international
-                defaultCountry="ID"
-                value={formData.scannerPhone}
-                onChange={(value) => setFormData({ ...formData, scannerPhone: value || '' })}
-                className="phone-input w-full [&>input]:px-5 [&>input]:py-4 [&>input]:border-2 [&>input]:border-slate-200 [&>input]:rounded-xl [&>input]:glass-dark [&>input]:text-slate-900"
-                placeholder="Enter phone number"
-              />
-            </div>
-
-            <div>
-              <label className="block text-slate-700 font-bold mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                Message (Optional)
-              </label>
-              <textarea
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                rows={4}
-                className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 glass-dark transition-all duration-300 resize-none"
-                placeholder="Where did you find it? Any additional details..."
-              />
-            </div>
-
-            <div className="glass-dark border-2 border-blue-300 rounded-2xl p-5">
-              <p className="text-blue-800 text-sm flex items-start gap-3">
-                <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span><strong className="font-bold">Location Sharing:</strong> When you submit this form, we&apos;ll ask for your location permission. This helps the owner know where the item was found. You can choose to allow or deny this request.</span>
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-5 rounded-xl font-bold hover:shadow-lg hover:shadow-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Contact Owner
-                </>
+            <CardContent className="space-y-6 flex-1">
+              {item?.description && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Description
+                  </h3>
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 p-4 rounded-lg border border-border/50">
+                    {item.description}
+                  </p>
+                </div>
               )}
-            </button>
 
-            <p className="text-sm text-slate-500 text-center leading-relaxed">
-              Your contact information will be shared with the owner so they can reach you.
-            </p>
-          </form>
+              {item?.customFields && Object.keys(item.customFields).length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Additional Details
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {Object.entries(item.customFields).map(([key, value]) => (
+                      <div key={key} className="bg-muted/30 p-3 rounded-lg border border-border/50 flex flex-col">
+                        <span className="text-xs font-medium text-muted-foreground">{key}</span>
+                        <span className="text-sm font-medium text-foreground break-all">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {item?.status === 'active' && (
+                <Alert variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20 mt-4">
+                  <ShieldAlert className="h-5 w-5" />
+                  <AlertTitle className="text-base font-bold">This item is reported as LOST</AlertTitle>
+                  <AlertDescription>
+                    If you found this item, please fill out the form below to contact the owner.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Contact Form */}
+          {item?.status !== 'inactive' ? (
+            <Card className="shadow-md flex flex-col h-full">
+              <CardHeader>
+                {/* Logo inside Contact Form on Desktop */}
+                <div className="flex justify-center hidden md:flex mb-4">
+                  <div className="relative inline-flex items-center justify-center rounded-full p-[3px] shadow-[0_0_10px_rgba(255,0,60,0.45),_0_0_10px_rgba(0,229,255,0.35)] bg-background">
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#ff003c] via-[#00e5ff] to-[#ff003c] animate-[spin_2s_linear_infinite] rounded-full"></div>
+                    <div className="relative bg-background rounded-full p-2 z-10 flex items-center justify-center">
+                      <Image
+                        src="/logos/logo-black.png"
+                        alt="Platform Logo"
+                        width={27}
+                        height={27}
+                        className="h-[27px] w-[27px] dark:invert rounded-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-primary" /> Contact Owner
+                </CardTitle>
+                <CardDescription>
+                  Found this item? Fill in your details and we&apos;ll securely notify the owner.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="scannerName" className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-muted-foreground" /> Your Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="scannerName"
+                      required
+                      value={formData.scannerName}
+                      onChange={(e) => setFormData({ ...formData, scannerName: e.target.value })}
+                      placeholder="Joni Neversleep"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scannerEmail" className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-muted-foreground" /> Email
+                    </Label>
+                    <Input
+                      id="scannerEmail"
+                      type="email"
+                      value={formData.scannerEmail}
+                      onChange={(e) => setFormData({ ...formData, scannerEmail: e.target.value })}
+                      placeholder="joni_neversleep@gmail.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="scannerPhone" className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-muted-foreground" /> Phone Number
+                    </Label>
+                    <div className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-shadow">
+                      <PhoneInput
+                        international
+                        defaultCountry="ID"
+                        value={formData.scannerPhone}
+                        onChange={(value) => setFormData({ ...formData, scannerPhone: value || '' })}
+                        className="w-full outline-none [&_input]:bg-transparent [&_input]:outline-none [&_input]:border-none [&_.PhoneInputCountry]:mr-2"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="message" className="flex items-center gap-2">
+                      <Info className="w-4 h-4 text-muted-foreground" /> Message <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
+                    <Textarea
+                      id="message"
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      rows={4}
+                      placeholder="Where did you find it? Any additional details..."
+                      className="resize-none"
+                    />
+                  </div>
+
+                  <Alert className="bg-primary/5 border-primary/20 text-foreground mt-6">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <AlertTitle>Location Sharing</AlertTitle>
+                    <AlertDescription className="text-muted-foreground text-sm">
+                      When you submit this form, your browser will ask for location permission. We send your current location to the owner to help retrieve the item.
+                    </AlertDescription>
+                  </Alert>
+
+                  <Button type="submit" size="lg" className="w-full mt-6" disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-5 w-5" />
+                        Notify Owner
+                      </>
+                    )}
+                  </Button>
+                  
+                  <p className="text-xs text-center text-muted-foreground mt-4">
+                    Your contact info will only be shared securely with the item owner.
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border border-2 border-dashed shadow-none bg-transparent">
+              <CardContent className="pt-10 pb-10 flex flex-col items-center text-center">
+                <Lock className="w-16 h-16 text-muted-foreground/40 mb-4" />
+                <h3 className="text-xl font-bold mb-2">Item is Inactive</h3>
+                <p className="text-muted-foreground">
+                  This item has been marked as inactive by the owner. They are not accepting contact requests at this time.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
-        )}
-
-        {/* Message for inactive items */}
-        {item?.status === 'inactive' && (
-          <div className="glass-dark border-2 border-slate-300 rounded-3xl p-10 text-center animate-scale-in">
-            <svg className="w-20 h-20 mx-auto mb-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <h3 className="text-2xl font-bold text-slate-700 mb-3">Item Inactive</h3>
-            <p className="text-slate-600 leading-relaxed">
-              This item has been marked as inactive. The owner is not currently accepting contact requests.
-            </p>
-          </div>
-        )}
       </div>
+
+      {/* Image Preview Overlay */}
+      {isPreviewOpen && item?.image && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 cursor-pointer animate-in fade-in duration-200"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <Image
+              src={item.image}
+              alt={item.name}
+              width={1200}
+              height={1200}
+              className="object-contain max-w-full max-h-full rounded-lg"
+            />
+            <button 
+              className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80 p-2 rounded-full transition-colors"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,14 +5,16 @@ This document outlines the system architecture, tech stack, directory structure,
 ## Tech Stack
 
 This project is built on top of a modern JavaScript/TypeScript ecosystem:
-- **Core Framework**: Next.js 16 (App Router)
+- **Core Framework**: Next.js 16 (App Router with Turbopack)
 - **Programming Language**: TypeScript (Targeting modern ECMAScript)
-- **Styling**: Tailwind CSS v4 (Utility-first CSS)
+- **Styling**: Tailwind CSS v4 (with Shadcn UI)
 - **Database**: MongoDB (Atlas) with Mongoose (ODM)
-- **Authentication**: JWT (JSON Web Tokens) & Bcrypt.js (Password Hashing)
+- **Authentication**: JWT & Bcrypt.js
 - **Data Validation**: Zod (Runtime & Type Validation)
 - **Realtime**: Ably WebSocket (In-app Notifications)
 - **Email**: Resend API
+- **Security & Protection**: `rate-limiter-flexible` (API rate limiting), Stealth Mode (returns `404` for unauthorized admin paths), database details removal from health checks, and HttpOnly cookies
+- **Unit Testing**: Vitest (Local testing with JSDOM and React Testing Library)
 
 ## Core Directory Structure (`src/`)
 

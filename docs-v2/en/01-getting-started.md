@@ -61,3 +61,4 @@ Before starting, ensure your system has the following installed:
 - `npm run build`: Builds the application for production.
 - `npm run start`: Starts the production server from the build output.
 - `npm run lint`: Runs ESLint to check code quality and formatting.
+- `npm run test`: Runs unit tests using Vitest.

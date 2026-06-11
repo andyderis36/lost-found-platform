@@ -37,7 +37,6 @@ export default function NotificationCenter() {
   useEffect(() => {
     if (!user) return;
     fetchNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Subscribe to real-time notifications via Ably
@@ -235,29 +234,29 @@ export default function NotificationCenter() {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+        <div className="absolute right-0 mt-2 w-80 bg-popover text-popover-foreground rounded-lg shadow-xl border border-border z-50 max-h-96 overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
-            <p className="text-sm text-gray-500">{unreadCount} unread</p>
+          <div className="sticky top-0 bg-muted px-4 py-3 border-b border-border">
+            <h3 className="font-semibold text-foreground">Notifications</h3>
+            <p className="text-sm text-muted-foreground">{unreadCount} unread</p>
           </div>
 
           {/* Notifications List */}
           {isLoading ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-gray-500">Loading...</p>
+              <p className="text-muted-foreground">Loading...</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-gray-500">No notifications yet</p>
+              <p className="text-muted-foreground">No notifications yet</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border">
               {notifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`px-4 py-3 hover:bg-gray-50 transition-colors ${
-                    !notification.read ? 'bg-blue-50' : ''
+                  className={`px-4 py-3 hover:bg-accent transition-colors ${
+                    !notification.read ? 'bg-accent/40' : ''
                   }`}
                 >
                   <div
@@ -265,20 +264,20 @@ export default function NotificationCenter() {
                     onClick={() => !notification.read && markAsRead(notification._id)}
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="font-medium text-gray-900 text-sm">
+                      <h4 className="font-medium text-foreground text-sm">
                         {notification.title}
                       </h4>
                       {!notification.read && (
                         <span className="inline-block w-2 h-2 bg-blue-600 rounded-full ml-2 flex-shrink-0"></span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
                     {notification.itemId && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         Item: {notification.itemId.name}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-muted-foreground/80 mt-1">
                       {new Date(notification.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -300,7 +299,7 @@ export default function NotificationCenter() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="sticky bottom-0 bg-gray-50 px-4 py-2 border-t border-gray-200 text-center">
+            <div className="sticky bottom-0 bg-muted px-4 py-2 border-t border-border text-center">
               <a
                 href="/dashboard"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"

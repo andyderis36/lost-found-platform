@@ -38,3 +38,16 @@ The platform processes images on the frontend to conserve bandwidth and storage 
 - **Image Cropper**: Users crop images within the browser using the `ImageCropper.tsx` component.
 - **Client-Side Compression**: Images are compressed before being transmitted to the backend (achieving 80-95% size reduction).
 - **Cloud Storage**: (In upcoming development phases, compressed images will be uploaded to dedicated cloud storage; currently, the system accommodates compressed base64 uploads or URL links).
+
+## 5. Security Hardening & Rate Limiting
+
+The application implements defense-in-depth security strategies:
+- **API Rate Limiting**: Sensitive pathways like auth registers, logins, and password resets are rate-limited on the API layer using the `rate-limiter-flexible` library, preventing denial-of-service and brute force vectors.
+- **Stealth Mode Access**: Admin endpoints return `404 Not Found` for unauthorized accounts, preventing endpoint scan discovery.
+- **Clean Health Endpoints**: `/api/health` does not leak DB configurations or system credentials.
+
+## 6. Automated Unit Testing
+
+A comprehensive testing suite is established using **Vitest**:
+- **Test Scripts**: Developers can execute `npm run test` to verify API logic and validation schemas.
+- **Coverage**: Core user operations, including email/password logic and user registration API handlers, are covered by automated unit tests.

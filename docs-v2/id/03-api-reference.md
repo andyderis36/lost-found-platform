@@ -8,6 +8,8 @@ Aplikasi ini menggunakan Next.js Route Handlers (`src/app/api/`) sebagai *backen
 - **Format Data**: `application/json`
 - **Autentikasi**: *Bearer Token* di *header* otorisasi (`Authorization: Bearer <token>`) atau disimpan di dalam *cookies* untuk sesi Next.js.
 - **Validasi**: Semua *payload* tervalidasi menggunakan skema Zod sebelum diproses.
+- **Rate Limiting**: Endpoint autentikasi diproteksi dengan rate limiter (`rate-limiter-flexible`) untuk membatasi traffic request dan brute force.
+- **Stealth Mode**: Endpoint admin menyembunyikan eksistensinya dengan mengembalikan status `404 Not Found` bagi pengguna non-admin (ilegal).
 
 ---
 
@@ -70,3 +72,26 @@ Aplikasi ini menggunakan Next.js Route Handlers (`src/app/api/`) sebagai *backen
 - **Endpoint**: `GET /api/admin/stats`
 - **Headers**: Membutuhkan Autentikasi (Admin Role).
 - **Aksi**: Mengembalikan total pengguna, total item terdaftar, dan metrik aplikasi lainnya.
+- **Keamanan**: Stealth Mode aktif (mengembalikan `404 Not Found` bagi pengguna non-admin).
+
+### 2. Manajemen Pengguna
+- **Endpoint**: `GET /api/admin/users`
+- **Headers**: Membutuhkan Autentikasi (Admin Role).
+- **Aksi**: Mengembalikan daftar seluruh pengguna platform.
+- **Keamanan**: Stealth Mode aktif.
+
+### 3. Manajemen Item
+- **Endpoint**: `GET /api/admin/items`
+- **Headers**: Membutuhkan Autentikasi (Admin Role).
+- **Aksi**: Mengembalikan daftar seluruh item terdaftar.
+- **Keamanan**: Stealth Mode aktif.
+
+---
+
+## Endpoint Utilitas (Utility)
+
+### 1. Health Check (Cek Kesehatan Sistem)
+- **Endpoint**: `GET /api/health`
+- **Akses**: Publik
+- **Respons**: `{ status: "ok", timestamp: "..." }`
+- **Keamanan**: Mengembalikan status operasional bersih tanpa membocorkan kredensial database maupun detail sistem (information exposure prevention).

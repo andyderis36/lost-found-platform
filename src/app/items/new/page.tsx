@@ -7,6 +7,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getBase64SizeKB, compressBase64Image } from '@/lib/imageCompression';
 import Image from 'next/image';
 import ImageCropper from '@/components/ImageCropper';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { AlertCircle, ArrowLeft, Loader2, Plus, X, Upload, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const CATEGORIES = [
   'Electronics',
@@ -49,7 +59,6 @@ export default function NewItemPage() {
     try {
       const token = localStorage.getItem('token');
       
-      // Build custom fields object
       const customFieldsObj: Record<string, string> = {};
       customFields.forEach(field => {
         if (field.key && field.value) {
@@ -72,15 +81,12 @@ export default function NewItemPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('API Error:', data);
         throw new Error(data.error || 'Failed to create item');
       }
 
-      // Redirect to the newly created item's detail page
       router.push(`/items/${data.data.id}`);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create item';
-      console.error('Create item error:', err);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -103,17 +109,13 @@ export default function NewItemPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '2s'}}></div>
-        </div>
-        <div className="text-center relative z-10">
-          <div className="relative inline-block">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200"></div>
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent absolute top-0 left-0"></div>
+      <div className="min-h-screen bg-background flex flex-col pt-16">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <p className="text-muted-foreground font-medium">Loading...</p>
           </div>
-          <p className="mt-4 text-slate-600 font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -124,299 +126,282 @@ export default function NewItemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden py-8 pt-24">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400/30 rounded-full mix-blend-multiply filter blur-xl animate-float" style={{animationDelay: '4s'}}></div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header */}
-        <div className="mb-8 animate-scale-in">
+    <div className="min-h-screen bg-muted/30 pt-16 pb-24">
+      <Navbar />
+      
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="mb-8">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 text-indigo-600 hover:text-purple-600 font-bold mb-4 transition-colors group"
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
-            <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Back to Dashboard</span>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
           </Link>
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 leading-tight pb-1">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             Register New Item
           </h1>
-          <p className="text-slate-600 text-lg">
+          <p className="text-muted-foreground text-lg">
             Add your item details below. A unique QR code will be generated automatically.
           </p>
         </div>
 
-        {/* Form */}
-        <div className="glass p-8 rounded-3xl animate-scale-in" style={{animationDelay: '0.1s'}}>
-          {error && (
-            <div className="glass-dark border-2 border-red-500/50 bg-red-500/10 text-red-700 px-6 py-4 rounded-2xl mb-6 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="font-medium">{error}</span>
+        <Card className="shadow-sm">
+          <CardContent className="pt-6">
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Item Name <span className="text-destructive">*</span></Label>
+                <Input
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="e.g., iPhone 15 Pro, MacBook Air, Leather Wallet"
+                />
               </div>
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Item Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Item Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900 placeholder-slate-400"
-                placeholder="e.g., iPhone 15 Pro, MacBook Air, Leather Wallet"
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label htmlFor="category" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                </svg>
-                Category *
-              </label>
-              <select
-                id="category"
-                required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-                Description *
-              </label>
-              <textarea
-                id="description"
-                required
-                rows={4}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 glass-dark rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all resize-none text-slate-900 placeholder-slate-400"
-                placeholder="Provide details about your item (color, model, distinguishing features, etc.)"
-              />
-            </div>
-
-            {/* Image Upload (Optional) */}
-            <div>
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-2">
-                Item Photo <span className="text-gray-400 text-xs">(Optional)</span>
-              </label>
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    try {
-                      // Read file as base64 for cropping
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        const base64 = event.target?.result as string;
-                        setImageToCrop(base64);
-                      };
-                      reader.readAsDataURL(file);
-                    } catch (error) {
-                      console.error('Image reading failed:', error);
-                      setError('Failed to read image. Please try a different image.');
-                    }
-                  }
-                }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Upload a photo of your item (JPEG, PNG, etc.). You can crop it to 1:1 ratio before uploading.
-              </p>
-              {imagePreview && (
-                <div className="mt-4">
-                  <div className="w-48 h-48 bg-white p-2 border border-gray-200 rounded-lg">
-                    <Image
-                      src={imagePreview}
-                      alt="Preview"
-                      width={192}
-                      height={192}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Preview (compressed size: {getBase64SizeKB(imagePreview)}KB)
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImagePreview('');
-                      setFormData({ ...formData, image: '' });
-                    }}
-                    className="mt-2 text-sm text-red-600 hover:text-red-700"
-                  >
-                    Remove Image
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Custom Fields */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Additional Details <span className="text-gray-400 text-xs">(Optional)</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={addCustomField}
-                  className="text-blue-600 text-sm font-medium hover:underline"
+              <div className="space-y-2">
+                <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value ?? '' })}
                 >
-                  + Add Field
-                </button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {customFields.length > 0 && (
-                <div className="space-y-3">
-                  {customFields.map((field, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="text"
-                        value={field.key}
-                        onChange={(e) => updateCustomField(index, 'key', e.target.value)}
-                        placeholder="Field name (e.g., Serial Number)"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
-                      />
-                      <div className="flex gap-2 flex-1">
+              <div className="space-y-2">
+                <Label htmlFor="description">Description <span className="text-destructive">*</span></Label>
+                <Textarea
+                  id="description"
+                  required
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Provide details about your item (color, model, distinguishing features, etc.)"
+                  className="resize-none"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="image">Item Photo <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                  <p className="text-xs text-muted-foreground mt-1 mb-2">
+                    Upload a photo of your item (JPEG, PNG). You can crop it to 1:1 ratio.
+                  </p>
+                  
+                  <div className="flex items-center gap-4">
+                    <label htmlFor="image" className={cn(buttonVariants({ variant: 'outline' }), 'relative cursor-pointer')}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Choose File
                         <input
+                          type="file"
+                          id="image"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              try {
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                  setImageToCrop(event.target?.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              } catch (error) {
+                                setError('Failed to read image. Please try a different image.');
+                              }
+                            }
+                          }}
+                        />
+                    </label>
+                    <span className="text-sm text-muted-foreground">
+                      {imagePreview ? 'Image selected' : 'No file chosen'}
+                    </span>
+                  </div>
+                </div>
+
+                {imagePreview && (
+                  <div className="bg-muted/50 p-4 rounded-xl inline-block border border-border">
+                    <div className="w-40 h-40 relative rounded-lg overflow-hidden border border-border bg-background">
+                      <Image
+                        src={imagePreview}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {getBase64SizeKB(imagePreview)}KB
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setImagePreview('');
+                          setFormData({ ...formData, image: '' });
+                        }}
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-border">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Label>Additional Details <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                    <p className="text-xs text-muted-foreground mt-1">Add custom fields like Serial Number, Brand, etc.</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={addCustomField}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Field
+                  </Button>
+                </div>
+
+                {customFields.length > 0 && (
+                  <div className="space-y-3">
+                    {customFields.map((field, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          type="text"
+                          value={field.key}
+                          onChange={(e) => updateCustomField(index, 'key', e.target.value)}
+                          placeholder="Name (e.g. Serial)"
+                          className="flex-1"
+                        />
+                        <Input
                           type="text"
                           value={field.value}
                           onChange={(e) => updateCustomField(index, 'value', e.target.value)}
                           placeholder="Value"
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900"
+                          className="flex-1"
                         />
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="icon"
                           onClick={() => removeCustomField(index)}
-                          className="px-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                          className="text-muted-foreground hover:text-destructive shrink-0"
                         >
-                          ✕
-                        </button>
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>ℹ️ What happens next:</strong> Once you submit, a unique QR code will be generated for your item. 
-                You can then download and print this QR code to attach to your item.
-              </p>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`flex-1 py-3 px-4 sm:px-6 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ${
-                  loading
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-lg hover:shadow-indigo-500/50'
-                }`}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    <span className="text-sm sm:text-base">Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span className="text-sm sm:text-base">Create Item & Generate QR</span>
-                  </>
+                    ))}
+                  </div>
                 )}
-              </button>
-              <Link
-                href="/dashboard"
-                className="px-4 sm:px-6 py-3 glass-dark rounded-xl font-semibold text-slate-700 hover:bg-white/80 transition-all flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span className="text-sm sm:text-base">Cancel</span>
-              </Link>
-            </div>
-          </form>
-        </div>
+              </div>
 
-        {/* Image Cropper Modal */}
+              <Alert className="bg-primary/5 border-primary/20 text-foreground">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertTitle>What happens next</AlertTitle>
+                <AlertDescription className="text-muted-foreground">
+                  Once you submit, a unique QR code will be generated for your item. You can then download and print this QR code to attach to your item.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border mt-6">
+                <Button type="submit" size="lg" className="w-full sm:flex-1" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <QrCodeIcon className="mr-2 h-4 w-4" />
+                      Create Item & Generate QR
+                    </>
+                  )}
+                </Button>
+                <Link href="/dashboard" className="w-full sm:w-32">
+                  <Button variant="outline" size="lg" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
         {imageToCrop && (
           <ImageCropper
             imageSrc={imageToCrop}
             onCropComplete={async (croppedImage) => {
               try {
-                // Compress the cropped image (already base64)
                 const compressedBase64 = await compressBase64Image(
                   croppedImage,
-                  {
-                    maxWidth: 800,
-                    maxHeight: 800,
-                    quality: 0.8,
-                    maxSizeKB: 500,
-                  }
+                  { maxWidth: 800, maxHeight: 800, quality: 0.8, maxSizeKB: 500 }
                 );
-                
-                const compressedSizeKB = getBase64SizeKB(compressedBase64);
-                console.log(`Compressed cropped image: ${compressedSizeKB}KB`);
                 
                 setFormData({ ...formData, image: compressedBase64 });
                 setImagePreview(compressedBase64);
                 setImageToCrop('');
               } catch (error) {
-                console.error('Image compression failed:', error);
                 setError('Failed to process image. Please try again.');
                 setImageToCrop('');
               }
             }}
             onCancel={() => {
               setImageToCrop('');
-              // Reset file input
               const fileInput = document.getElementById('image') as HTMLInputElement;
               if (fileInput) fileInput.value = '';
             }}
           />
         )}
-      </div>
+      </main>
     </div>
   );
+}
+
+function QrCodeIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="5" height="5" x="3" y="3" rx="1" />
+      <rect width="5" height="5" x="16" y="3" rx="1" />
+      <rect width="5" height="5" x="3" y="16" rx="1" />
+      <path d="M21 16h-3a2 2 0 0 0-2 2v3" />
+      <path d="M21 21v.01" />
+      <path d="M12 7v3a2 2 0 0 1-2 2H7" />
+      <path d="M3 12h.01" />
+      <path d="M12 3h.01" />
+      <path d="M12 16v.01" />
+      <path d="M16 12h1" />
+      <path d="M21 12v.01" />
+      <path d="M12 21v-1" />
+    </svg>
+  )
 }

@@ -8,6 +8,8 @@ This application utilizes Next.js Route Handlers (`src/app/api/`) as its backend
 - **Data Format**: `application/json`
 - **Authentication**: Bearer Token in the authorization header (`Authorization: Bearer <token>`) or stored in cookies for Next.js sessions.
 - **Validation**: All payloads are validated against Zod schemas prior to processing.
+- **Rate Limiting**: Authentication endpoints are rate-limited via `rate-limiter-flexible` to throttle request traffic.
+- **Stealth Mode**: Unauthorized requests to admin routes return `404 Not Found` to conceal endpoint presence.
 
 ---
 
@@ -69,4 +71,27 @@ This application utilizes Next.js Route Handlers (`src/app/api/`) as its backend
 ### 1. Platform Statistics
 - **Endpoint**: `GET /api/admin/stats`
 - **Headers**: Requires Authentication (Admin Role).
-- **Action**: Returns total users, total registered items, and other application metrics.
+- **Action**: Returns total users, total registered items, and other metrics.
+- **Security**: Stealth Mode enabled (returns `404 Not Found` for unauthorized/non-admin users).
+
+### 2. User Management
+- **Endpoint**: `GET /api/admin/users`
+- **Headers**: Requires Authentication (Admin Role).
+- **Action**: Lists all registered users.
+- **Security**: Stealth Mode enabled.
+
+### 3. Item Management
+- **Endpoint**: `GET /api/admin/items`
+- **Headers**: Requires Authentication (Admin Role).
+- **Action**: Lists all registered items.
+- **Security**: Stealth Mode enabled.
+
+---
+
+## Utility Endpoints
+
+### 1. Health Check
+- **Endpoint**: `GET /api/health`
+- **Access**: Public
+- **Response**: `{ status: "ok", timestamp: "..." }`
+- **Security**: Clean check page that does not disclose system details (e.g., database names or tech stack).

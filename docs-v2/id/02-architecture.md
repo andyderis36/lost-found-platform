@@ -5,14 +5,16 @@ Dokumen ini menguraikan arsitektur sistem, tumpukan teknologi (*tech stack*), st
 ## Tech Stack (Tumpukan Teknologi)
 
 Proyek ini dibangun di atas ekosistem JavaScript/TypeScript modern:
-- **Framework Utama**: Next.js 16 (App Router)
+- **Framework Utama**: Next.js 16 (App Router dengan Turbopack)
 - **Bahasa Pemrograman**: TypeScript (Target ECMAScript modern)
-- **Styling**: Tailwind CSS v4 (Utility-first CSS)
+- **Styling**: Tailwind CSS v4 (dengan Shadcn UI)
 - **Database**: MongoDB (di Atlas) dengan Mongoose (ODM)
-- **Autentikasi**: JWT (JSON Web Tokens) & Bcrypt.js (Hashing Password)
+- **Autentikasi**: JWT & Bcrypt.js
 - **Validasi Data**: Zod (Runtime & Type Validation)
 - **Realtime**: Ably WebSocket (Notifikasi *in-app*)
 - **Email**: Resend API
+- **Keamanan & Proteksi**: `rate-limiter-flexible` (API rate limiting), Stealth Mode (mengembalikan `404` untuk route admin ilegal), pembersihan info database di health check, dan HttpOnly cookies
+- **Unit Testing**: Vitest (Pengujian lokal dengan JSDOM dan React Testing Library)
 
 ## Struktur Direktori Utama (`src/`)
 

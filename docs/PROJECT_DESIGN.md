@@ -1073,6 +1073,17 @@ const passwordMinLength = 6;
 - SameSite cookie attribute
 - Token validation for state changes
 
+#### API Rate Limiting
+- Employs `rate-limiter-flexible` to rate-limit authentication endpoints (`/api/auth/login`, `/api/auth/register`, `/api/auth/verify-email`, `/api/auth/forgot-password`, `/api/auth/reset-password`).
+- Limits brute force requests and DDoS vectors in production and local environments.
+
+#### Stealth Mode Authorization
+- Admin endpoints (e.g., `/api/admin/users`, `/api/admin/stats`, `/api/admin/items`) leverage a `Stealth Mode` configuration.
+- When an unauthorized user attempts to access these endpoints, the server returns a `404 Not Found` response instead of `403 Forbidden` or `401 Unauthorized` to obscure the existence of administrative endpoints.
+
+#### Database Info Exposure Protection
+- Health check endpoints (`/api/health`) are cleaned of tech stack details (such as database names like `lost-found-platform`) to avoid information disclosure.
+
 ---
 
 ## Email System Design
@@ -1316,7 +1327,7 @@ DEV_OVERRIDE_EMAIL=developer@test.com
 ### Frontend Technologies
 ```
 ┌─────────────────────────────────────────┐
-│  Framework: Next.js 15.5.6               │
+│  Framework: Next.js 16.2.6               │
 │  - App Router                            │
 │  - React 19 Server Components            │
 │  - TypeScript 5.x                        │
@@ -1327,53 +1338,51 @@ DEV_OVERRIDE_EMAIL=developer@test.com
 │  - Utility-first CSS                     │
 │  - Custom design system                  │
 │  - Responsive design                     │
+│  - Shadcn UI (Radix Primitives)          │
 └─────────────────────────────────────────┘
 ┌─────────────────────────────────────────┐
 │  UI Components:                          │
-│  - react-phone-number-input (3.3.4)      │
+│  - react-phone-number-input (3.4.16)     │
 │  - Custom components (Navbar, Cropper)   │
+│  - react-easy-crop                       │
 └─────────────────────────────────────────┘
 ```
 
 ### Backend Technologies
 ```
 ┌─────────────────────────────────────────┐
-│  Runtime: Node.js 18+                    │
+│  Runtime: Node.js 20+                    │
 │  API: Next.js API Routes                 │
 │  Database: MongoDB Atlas                 │
-│  ODM: Mongoose 8.x                       │
+│  ODM: Mongoose 8.22.x                    │
 └─────────────────────────────────────────┘
 ┌─────────────────────────────────────────┐
-│  Authentication:                         │
-│  - jsonwebtoken (9.x) - JWT tokens       │
-│  - bcryptjs (2.x) - Password hashing     │
-│  - crypto (built-in) - Token generation  │
+│  Authentication & Security:              │
+│  - jsonwebtoken (9.0.x)                  │
+│  - bcryptjs (3.0.x)                      │
+│  - rate-limiter-flexible (11.0.x)        │
 └─────────────────────────────────────────┘
 ┌─────────────────────────────────────────┐
 │  External Services:                      │
-│  - Resend (4.x) - Email service          │
-│  - qrcode (1.x) - QR generation          │
-│  - nanoid (5.x) - Unique IDs             │
+│  - Resend (6.11.x) - Email service       │
+│  - qrcode (1.5.x) - QR generation        │
+│  - nanoid (5.1.x) - Unique IDs           │
+│  - ably (2.21.x) - Realtime messaging    │
 └─────────────────────────────────────────┘
 ```
 
-### Development Tools
+### Development & Testing Tools
 ```
 ┌─────────────────────────────────────────┐
-│  Code Quality:                           │
-│  - ESLint 9.x                            │
+│  Testing & Code Quality:                 │
+│  - Vitest 4.1.x (Unit Testing)           │
+│  - ESLint 9.x Flat Config                │
 │  - TypeScript strict mode                │
-│  - Prettier (formatting)                 │
 └─────────────────────────────────────────┘
 ┌─────────────────────────────────────────┐
-│  Version Control:                        │
-│  - Git                                   │
-│  - GitHub                                │
-└─────────────────────────────────────────┘
-┌─────────────────────────────────────────┐
-│  Deployment:                             │
-│  - Vercel (hosting)                      │
-│  - Namecheap (DNS)                       │
+│  Version Control & Deployment:           │
+│  - Git & GitHub                          │
+│  - Vercel (CI/CD Deployment)             │
 └─────────────────────────────────────────┘
 ```
 
@@ -1557,9 +1566,29 @@ The Lost & Found Platform is a comprehensive, production-ready web application b
 - All error messages are clear and actionable
 
 ### Project Status
-- **Production Ready** as of December 2025
+- **Production Ready** as of June 2026
 - All major bugs and UI/UX issues resolved
-- Fully responsive, accessible, and scalable
+- Fully responsive, secure, tested, and scalable
 - See full documentation above for architecture, API, and future roadmap
+
+---
+
+## June 2026 Major Updates
+
+### UI/UX & Responsiveness
+- **Enhanced Filter Management:** Added sorting options (Newest, Oldest, Alphabetical) and time frames (Today, Past Week, Past Month) for dashboard and admin items interfaces.
+- **Search Capabilities:** Integrated search query bars for dynamic frontend search filtering.
+- **Responsive Padding & Margins:** Cleaned up spacing and layout structure for all filter controls across mobile, tablet, and desktop devices.
+- **Completed Frontend Redesign:** All 18 UI screens are now fully migrated and redesigned using modern Tailwind CSS v4 and Shadcn UI components.
+
+### Security Hardening
+- **Stealth Mode Authorization:** Enforced stealth mode for unauthorized requests attempting to access admin endpoints, returning `404 Not Found` instead of revealing the admin paths' existence.
+- **API Rate Limiting:** Integrated `rate-limiter-flexible` across authentication/credentials flows (`/api/auth/register`, `/api/auth/login`, `/api/auth/verify-email`, `/api/auth/forgot-password`, `/api/auth/reset-password`).
+- **Health Check Credentials Exposure Fixed:** Removed database naming and operational backend details from `/api/health` to prevent system information disclosure.
+
+### Quality Assurance & Testing
+- **Vitest Integration:** Added Vitest framework along with JSDOM and React Testing Library setup for fast, local unit testing.
+- **Unit Testing Coverage:** Added unit test coverage for registration API handlers (`src/app/api/auth/register/route.test.ts`) and security validators.
+- **ESLint Flat Config:** Migrated from ESLint 8 legacy config to ESLint 9 Flat Config (`eslint.config.mjs`) to ensure modern code linting standards and seamless builds.
 
 ---

@@ -17,8 +17,10 @@ Users can register valuable items and attach QR tags. When an item is lost and f
 The official technical documentation for developers, audit, and testing purposes is available in the **[`docs-v2` directory](./docs-v2)** (Available in English and Bahasa Indonesia).
 
 ## 🚀 Latest Progress
+- ✅ Admin and User item management enhanced with filter & sorting options (status, category, time frame, search query, owner ID)
+- ✅ Integrated Vitest framework with initial unit tests (6/6 tests passing) for registration API and authentication helpers
+- ✅ Reinforced API security: rate limiting on auth routes, stealth mode (404) for admin paths, and health check DB name removal
 - ✅ Realtime in-app notifications implemented and integrated with Ably
-- ✅ Scan contact flow fixed with stable success state and notification delivery
 - ✅ ESLint 9 flat config migration completed for cleaner Vercel deploys
 - 🔄 Next goal: Cloud image storage integration for item photos
 
@@ -92,18 +94,16 @@ The official technical documentation for developers, audit, and testing purposes
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Next.js 16.x (App Router with Turbopack)
-- **Language:** TypeScript 6
-- **Database:** MongoDB Atlas + Mongoose ODM
-- **Styling:** Tailwind CSS v4 with custom animations and utilities
-- **Authentication:** JWT with bcryptjs
-- **Validation:** Zod for runtime schema validation
-- **Realtime:** Ably for in-app notifications
-- **Email Service:** Resend API with custom domain (lostfoundplatform.me)
-- **QR Code:** qrcode + nanoid for unique code generation
-- **Phone Input:** react-phone-number-input for international formats
-- **Image Processing:** Frontend compression + ImageCropper component
-- **Geolocation:** Browser Geolocation API with reverse geocoding
+- **Framework:** Next.js 16.2.6 (App Router with Turbopack)
+- **Language:** TypeScript 5.x
+- **Database:** MongoDB Atlas + Mongoose ODM 8.22.x
+- **Styling:** Tailwind CSS v4 with Shadcn UI and custom animations
+- **Authentication:** JWT (jsonwebtoken 9.0.x) with bcryptjs 3.0.x
+- **Validation:** Zod 4.x for runtime validation
+- **Realtime:** Ably 2.21.x for realtime websocket alerts
+- **Email Service:** Resend API 6.11.x with custom domain (noreply@lostfoundplatform.me)
+- **Rate Limiting:** rate-limiter-flexible 11.0.x for API route protection
+- **Testing:** Vitest 4.1.x with JSDOM and React Testing Library
 - **Deployment:** Vercel (Production: https://www.lostfoundplatform.me/)
 
 ## 📁 Project Structure

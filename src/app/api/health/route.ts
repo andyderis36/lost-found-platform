@@ -7,8 +7,7 @@ export async function GET() {
     
     return NextResponse.json({
       success: true,
-      message: '✅ MongoDB connected successfully!',
-      database: 'lost-found-platform',
+      message: '✅ System connected successfully!',
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

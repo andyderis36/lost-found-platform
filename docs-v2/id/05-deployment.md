@@ -8,9 +8,10 @@ Vercel adalah platform *hosting* yang optimal untuk Next.js. Proyek ini (`https:
 
 ### Alur CI/CD
 1. **Push ke branch `main`**: Vercel secara otomatis mendeteksi perubahan.
-2. **Build Process**: Vercel menjalankan perintah `npm run build` yang melibatkan `next build --turbopack`.
-3. **Linting & Type Checking**: ESLint 9 (Flat Config) berjalan selama *build* untuk memastikan tidak ada kesalahan fatal. Build akan gagal jika terdapat *linting error*.
-4. **Deploy**: Jika *build* sukses, sistem akan langsung di-deploy ke URL *production*.
+2. **Pengujian Otomatis**: Menjalankan pengujian unit melalui `npm run test` untuk memastikan validitas logika API dan skema validator.
+3. **Build Process**: Vercel menjalankan perintah `npm run build` yang melibatkan `next build --turbopack`.
+4. **Linting & Type Checking**: ESLint 9 (Flat Config) dan pemeriksaan tipe TypeScript (`npx tsc --noEmit`) berjalan selama *build* untuk memastikan tidak ada kesalahan fatal.
+5. **Deploy**: Jika *build* dan pengujian sukses, sistem akan langsung di-deploy ke URL *production*.
 
 ### Environment Variables di Vercel
 Pastikan seluruh variabel yang ada di `.env.local` telah diisi di pengaturan proyek Vercel (*Settings* -> *Environment Variables*):

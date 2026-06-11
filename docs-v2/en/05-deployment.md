@@ -8,9 +8,10 @@ Vercel is the optimal hosting platform for Next.js. This project (`https://www.l
 
 ### CI/CD Workflow
 1. **Push to `main` branch**: Vercel automatically detects the changes.
-2. **Build Process**: Vercel executes the `npm run build` command, which incorporates `next build --turbopack`.
-3. **Linting & Type Checking**: ESLint 9 (Flat Config) runs during the build to catch fatal errors. The build will fail if linting errors are present.
-4. **Deploy**: Upon a successful build, the system is immediately deployed to the production URL.
+2. **Automated Testing**: Run unit tests via `npm run test` to verify API and schema logic before or during deploy checks.
+3. **Build Process**: Vercel executes the `npm run build` command, which incorporates `next build --turbopack`.
+4. **Linting & Type Checking**: ESLint 9 (Flat Config) and TypeScript compiler checks (`npx tsc --noEmit`) run during the build to catch fatal errors.
+5. **Deploy**: Upon a successful build and test pass, the system is immediately deployed to the production URL.
 
 ### Environment Variables in Vercel
 Ensure all variables present in `.env.local` are populated in the Vercel project settings (Settings -> Environment Variables):

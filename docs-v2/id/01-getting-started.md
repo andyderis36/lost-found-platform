@@ -61,3 +61,4 @@ Sebelum memulai, pastikan sistem Anda telah terinstal:
 - `npm run build`: Melakukan *build* aplikasi untuk *production*.
 - `npm run start`: Menjalankan server *production* hasil build.
 - `npm run lint`: Menjalankan ESLint untuk memeriksa kualitas dan format kode.
+- `npm run test`: Menjalankan unit tests menggunakan Vitest.

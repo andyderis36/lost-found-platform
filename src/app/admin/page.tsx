@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, Package, Search, SearchX, BarChart3, Users2, LayoutDashboard, Clock, Tag, Box, ArrowRight, Loader2, ShieldAlert, PieChart } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Stats {
   users: {
@@ -75,20 +80,12 @@ export default function AdminDashboard() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        </div>
-
-        <div className="text-center relative z-10">
-          <div className="glass p-8 rounded-3xl inline-block">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 mx-auto"></div>
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-indigo-600 border-r-purple-600 absolute top-0 left-1/2 -translate-x-1/2"></div>
-            </div>
-            <p className="mt-6 text-slate-700 font-bold text-lg">Loading...</p>
+      <div className="min-h-screen bg-background flex flex-col pt-16">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-500">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <p className="text-muted-foreground font-medium text-lg">Loading statistics...</p>
           </div>
         </div>
       </div>
@@ -101,211 +98,204 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 relative overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="glass-dark border-2 border-red-300 text-red-700 px-6 py-4 rounded-2xl font-semibold flex items-center gap-3">
-            <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            {error}
-          </div>
+      <div className="min-h-screen bg-background flex flex-col pt-16">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 w-full mt-8">
+          <Alert variant="destructive">
+            <ShieldAlert className="h-5 w-5" />
+            <AlertTitle>Error Loading Dashboard</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 pt-28 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute -bottom-32 left-1/2 w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float" style={{ animationDelay: '4s' }}></div>
-      </div>
+    <div className="min-h-screen bg-muted/30 pt-24 pb-12">
+      <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Header */}
-        <div className="mb-10 animate-scale-in">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 leading-tight pb-1">Admin Dashboard</h1>
-          <p className="text-slate-600 text-lg font-semibold">Platform statistics and management</p>
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground text-lg">Platform statistics and system management.</p>
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 animate-scale-in">
-          <Link
-            href="/admin/users"
-            className="glass p-8 rounded-2xl card-hover group"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="glass-dark p-3 rounded-xl group-hover:bg-indigo-100 transition-colors duration-300">
-                <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">Manage Users</h3>
-            </div>
-            <p className="text-slate-600">View, edit, and delete user accounts</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link href="/admin/users" className="block group">
+            <Card className="h-full transition-all duration-300 hover:shadow-md hover:border-primary/50 bg-gradient-to-br from-card to-muted/50">
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Manage Users</CardTitle>
+                  <CardDescription>View, edit, and delete accounts</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
           </Link>
-          <Link
-            href="/admin/items"
-            className="glass p-8 rounded-2xl card-hover group"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="glass-dark p-3 rounded-xl group-hover:bg-purple-100 transition-colors duration-300">
-                <svg className="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">Manage Items</h3>
-            </div>
-            <p className="text-slate-600">View and manage all items</p>
+
+          <Link href="/admin/items" className="block group">
+            <Card className="h-full transition-all duration-300 hover:shadow-md hover:border-primary/50 bg-gradient-to-br from-card to-muted/50">
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <div className="p-3 bg-purple-500/10 text-purple-600 rounded-xl group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Manage Items</CardTitle>
+                  <CardDescription>View and manage all items</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
           </Link>
-          <Link
-            href="/dashboard"
-            className="glass p-8 rounded-2xl card-hover group"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="glass-dark p-3 rounded-xl group-hover:bg-pink-100 transition-colors duration-300">
-                <svg className="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-slate-900">User Dashboard</h3>
-            </div>
-            <p className="text-slate-600">Switch to user view</p>
+
+          <Link href="/dashboard" className="block group">
+            <Card className="h-full transition-all duration-300 hover:shadow-md hover:border-primary/50 bg-gradient-to-br from-card to-muted/50">
+              <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <div className="p-3 bg-emerald-500/10 text-emerald-600 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                  <LayoutDashboard className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">User Dashboard</CardTitle>
+                  <CardDescription>Switch back to user view</CardDescription>
+                </div>
+              </CardHeader>
+            </Card>
           </Link>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 animate-scale-in">
-          <div className="glass p-6 rounded-2xl card-hover">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-4 shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-4 bg-primary/10 text-primary rounded-xl">
+                <Users2 className="w-8 h-8" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wide">Total Users</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.users.total || 0}</p>
-                <p className="text-xs text-slate-500 font-semibold">{stats?.users.admins || 0} admins</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass p-6 rounded-2xl card-hover">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wide">Total Items</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.items.total || 0}</p>
-                <p className="text-xs text-slate-500 font-semibold">{stats?.items.active || 0} active</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass p-6 rounded-2xl card-hover">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-4 shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wide">Found Items</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.items.found || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass p-6 rounded-2xl card-hover">
-            <div className="flex items-center gap-4">
-              <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-4 shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wide">Total Scans</p>
-                <p className="text-3xl font-bold text-slate-900">{stats?.scans.total || 0}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Items by Category */}
-        <div className="glass p-8 rounded-3xl mb-10 animate-scale-in">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6">Items by Category</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {stats?.items.byCategory.map((cat) => (
-              <div key={cat.category} className="glass-dark p-6 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all duration-300 card-hover">
-                <p className="text-sm text-slate-600 font-bold uppercase tracking-wide mb-2">{cat.category}</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{cat.count}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Scans */}
-        <div className="glass p-8 rounded-3xl animate-scale-in">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-6 flex items-center gap-3">
-            <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Recent Scans
-          </h2>
-          {stats?.scans.recent && stats.scans.recent.length > 0 ? (
-            <div className="space-y-4">
-              {stats.scans.recent.map((scan) => (
-                <div key={scan.id} className="glass-dark border border-slate-200 rounded-2xl p-5 hover:border-indigo-300 transition-all duration-300">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-900 text-lg mb-1">{scan.scannerName}</p>
-                      {scan.item && (
-                        <p className="text-sm text-slate-600 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
-                          <span><strong>Item:</strong> {scan.item.name} ({scan.item.qrCode})</span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="glass px-4 py-2 rounded-lg">
-                      <p className="text-xs text-slate-600 font-bold flex items-center gap-2 whitespace-nowrap">
-                        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {new Date(scan.scannedAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  </div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Total Users</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-bold">{stats?.users.total || 0}</h3>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="glass-dark p-8 rounded-2xl text-center border border-slate-200">
-              <svg className="w-16 h-16 mx-auto mb-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-slate-600 font-semibold">No scans yet</p>
-            </div>
-          )}
+                <p className="text-xs text-muted-foreground mt-1">{stats?.users.admins || 0} admins</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-4 bg-orange-500/10 text-orange-600 rounded-xl">
+                <Box className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Total Items</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-bold">{stats?.items.total || 0}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{stats?.items.active || 0} active (lost)</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-4 bg-green-500/10 text-green-600 rounded-xl">
+                <Search className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Found Items</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-bold">{stats?.items.found || 0}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">successfully recovered</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="p-4 bg-blue-500/10 text-blue-600 rounded-xl">
+                <BarChart3 className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Total Scans</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-bold">{stats?.scans.total || 0}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">all time QR scans</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Items by Category */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-primary" /> Items by Category
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {stats?.items.byCategory.map((cat) => (
+                  <div key={cat.category} className="p-4 rounded-xl border border-border bg-card hover:border-primary/50 transition-colors">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" /> {cat.category}
+                    </p>
+                    <p className="text-2xl font-bold">{cat.count}</p>
+                  </div>
+                ))}
+                {(!stats?.items.byCategory || stats.items.byCategory.length === 0) && (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No items found.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Scans */}
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" /> Recent Scans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stats?.scans.recent && stats.scans.recent.length > 0 ? (
+                <div className="space-y-4">
+                  {stats.scans.recent.map((scan) => (
+                    <div key={scan.id} className="p-4 border border-border rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 hover:bg-muted/30 transition-colors">
+                      <div>
+                        <p className="font-semibold text-foreground">{scan.scannerName}</p>
+                        {scan.item && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                            <Box className="w-3.5 h-3.5" />
+                            {scan.item.name} <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded ml-1">{scan.item.qrCode}</span>
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="w-fit">
+                        {new Date(scan.scannedAt).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
+                  <SearchX className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground font-medium">No scans recorded yet</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }

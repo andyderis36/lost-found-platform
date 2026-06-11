@@ -38,3 +38,16 @@ Platform ini memproses gambar di sisi *frontend* untuk menghemat biaya *bandwidt
 - **Image Cropper**: Pengguna memotong (crop) gambar di *browser* menggunakan komponen `ImageCropper.tsx`.
 - **Kompresi Klien**: Gambar dikompresi sebelum dikirim ke *backend* (mengurangi ukuran hingga 80-95%).
 - **Cloud Storage**: (Dalam pengembangan tahap selanjutnya, gambar yang dikompresi akan diunggah ke *cloud storage* khusus, saat ini sistem mengakomodasi upload *base64* terkompresi atau tautan URL).
+
+## 5. Keamanan & Rate Limiting (Security Hardening)
+
+Aplikasi menerapkan strategi keamanan berlapis (*defense-in-depth*):
+- **API Rate Limiting**: Alur sensitif seperti registrasi akun, login, dan reset password dilindungi di layer API menggunakan pustaka `rate-limiter-flexible` untuk mencegah brute force dan DDoS.
+- **Stealth Mode Access**: Endpoint admin mengembalikan `404 Not Found` untuk akun non-admin guna mencegah pemindaian endpoint admin ilegal.
+- **Health Check Aman**: `/api/health` dibersihkan dari detail teknis (seperti nama database atau teknologi database) agar terhindar dari kebocoran informasi.
+
+## 6. Pengujian Unit Otomatis (Automated Testing)
+
+Sistem pengujian unit diimplementasikan menggunakan framework **Vitest**:
+- **Script Pengujian**: Developer dapat menjalankan `npm run test` untuk memverifikasi logika API dan skema validasi Zod secara instan.
+- **Cakupan Pengujian**: Alur autentikasi inti seperti pendaftaran akun, validasi email/password, dan API handler (`src/app/api/auth/register/route.test.ts`) dilindungi oleh pengujian unit otomatis.
