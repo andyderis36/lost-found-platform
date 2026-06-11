@@ -285,6 +285,11 @@ export async function sendScanNotificationEmail(
     email?: string;
     phone?: string;
     message?: string;
+    location?: {
+      latitude: number;
+      longitude: number;
+      address?: string;
+    };
   }
 ) {
   // Skip if no real API key (build time or disabled)
@@ -346,8 +351,29 @@ export async function sendScanNotificationEmail(
                           ${scannerInfo.name ? `<p style="margin: 0 0 10px; color: #4b5563; font-size: 15px;"><strong>Name:</strong> ${scannerInfo.name}</p>` : ''}
                           ${scannerInfo.email ? `<p style="margin: 0 0 10px; color: #4b5563; font-size: 15px;"><strong>Email:</strong> <a href="mailto:${scannerInfo.email}" style="color: #2563eb; text-decoration: none;">${scannerInfo.email}</a></p>` : ''}
                           ${scannerInfo.phone ? `<p style="margin: 0 0 10px; color: #4b5563; font-size: 15px;"><strong>Phone:</strong> <a href="tel:${scannerInfo.phone}" style="color: #2563eb; text-decoration: none;">${scannerInfo.phone}</a></p>` : ''}
+                          ${scannerInfo.location ? `<p style="margin: 0 0 10px; color: #4b5563; font-size: 15px;"><strong>📍 Location:</strong> <a href="https://www.google.com/maps?q=${scannerInfo.location.latitude},${scannerInfo.location.longitude}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none;">${scannerInfo.location.address || `${scannerInfo.location.latitude}, ${scannerInfo.location.longitude}`}</a></p>` : ''}
                           ${scannerInfo.message ? `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #d1d5db;"><p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">Message:</p><p style="margin: 0; color: #4b5563; font-size: 15px; line-height: 1.6;">${scannerInfo.message}</p></div>` : ''}
                         </div>
+                        
+                        <!-- Action Buttons -->
+                        <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                          <tr>
+                            ${scannerInfo.location ? `
+                            <td style="padding-right: 8px; width: 50%;">
+                              <a href="https://www.google.com/maps?q=${scannerInfo.location.latitude},${scannerInfo.location.longitude}" target="_blank" rel="noopener noreferrer" style="display: block; padding: 14px 20px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; text-align: center;">
+                                📍 View Location
+                              </a>
+                            </td>
+                            ` : ''}
+                            ${scannerInfo.phone ? `
+                            <td style="${scannerInfo.location ? 'padding-left: 8px;' : ''} width: ${scannerInfo.location ? '50%' : '100%'};">
+                              <a href="https://wa.me/${scannerInfo.phone.replace(/[^0-9]/g, '')}" target="_blank" rel="noopener noreferrer" style="display: block; padding: 14px 20px; background-color: #25d366; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; text-align: center;">
+                                💬 WhatsApp
+                              </a>
+                            </td>
+                            ` : ''}
+                          </tr>
+                        </table>
                         
                         <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
                           📱 Check your dashboard for more details and scan history.
