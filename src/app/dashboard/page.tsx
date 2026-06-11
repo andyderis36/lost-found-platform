@@ -236,11 +236,11 @@ export default function DashboardPage() {
               <div key={item.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
                 {/* Item Image or QR Code - Square 1:1 */}
                 {item.image ? (
-                  <div className="w-full aspect-square bg-gray-100">
+                  <div className="w-full aspect-square bg-white p-4">
                     <img 
                       src={item.image} 
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-lg"
                     />
                   </div>
                 ) : (

@@ -32,7 +32,7 @@ export async function GET(
       );
     }
 
-    // Find item and verify ownership
+    // Find item and verify ownership or admin access
     const item = await Item.findById(itemId);
 
     if (!item) {
@@ -42,8 +42,8 @@ export async function GET(
       );
     }
 
-    // Check ownership
-    if (item.userId.toString() !== authUser.userId) {
+    // Check ownership or admin role
+    if (item.userId.toString() !== authUser.userId && authUser.role !== 'admin') {
       return NextResponse.json(
         errorResponse('Forbidden - You do not own this item'),
         { status: 403 }
