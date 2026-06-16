@@ -235,44 +235,44 @@ export async function resetRateLimit(keyPrefix: string, ip: string, maxPoints: n
 export const RATE_LIMITS = {
   // Scan endpoint limits
   SCAN_GLOBAL: {
-    points: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS_PER_HOUR || '100'),
+    points: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS_PER_HOUR || '300'),
     duration: 3600, // 1 hour
     prefix: 'scan',
   },
   SCAN_DEBOUNCE: {
     points: 1,
-    duration: parseInt(process.env.RATE_LIMIT_SCAN_DEBOUNCE_SECONDS || '30'),
+    duration: parseInt(process.env.RATE_LIMIT_SCAN_DEBOUNCE_SECONDS || '5'),
     prefix: 'scan-debounce',
   },
 
   // Auth endpoint limits
   AUTH_LOGIN: {
-    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '5'),
+    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '20'),
     duration: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MINUTES || '15') * 60,
     prefix: 'auth-login',
   },
   AUTH_REGISTER: {
-    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '5'),
+    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '20'),
     duration: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MINUTES || '15') * 60,
     prefix: 'auth-register',
   },
   AUTH_FORGOT_PASSWORD: {
-    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '5'),
+    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '20'),
     duration: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MINUTES || '15') * 60,
     prefix: 'auth-forgot-password',
   },
   AUTH_RESET_PASSWORD: {
-    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '5'),
+    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '20'),
     duration: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MINUTES || '15') * 60,
     prefix: 'auth-reset-password',
   },
   AUTH_VERIFY_EMAIL: {
-    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '5'),
+    points: parseInt(process.env.RATE_LIMIT_AUTH_ATTEMPTS || '20'),
     duration: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MINUTES || '15') * 60,
     prefix: 'auth-verify-email',
   },
   PUBLIC_ITEM: {
-    points: 30,
+    points: 60, // Loosened from 30
     duration: 60,
     prefix: 'public-item',
   },
@@ -281,7 +281,52 @@ export const RATE_LIMITS = {
 /**
  * Check if rate limiting is enabled
  */
-export function isRateLimitingEnabled(): boolean {
-  const enabled = process.env.RATE_LIMIT_ENABLED !== 'false';
-  return enabled;
+export function isRateLimitingEnabled(type?: string): boolean {
+  // Global switch - if false, all rate limiting is disabled
+  if (process.env.RATE_LIMIT_ENABLED === 'false') {
+    return false;
+  }
+
+  if (!type) {
+    return true;
+  }
+
+  // Map the prefix/type to its specific environment variable
+  let envVar = '';
+  switch (type) {
+    case 'auth-login':
+      envVar = 'RATE_LIMIT_LOGIN_ENABLED';
+      break;
+    case 'auth-register':
+      envVar = 'RATE_LIMIT_REGISTER_ENABLED';
+      break;
+    case 'auth-forgot-password':
+      envVar = 'RATE_LIMIT_FORGOT_PASSWORD_ENABLED';
+      break;
+    case 'auth-reset-password':
+      envVar = 'RATE_LIMIT_RESET_PASSWORD_ENABLED';
+      break;
+    case 'auth-verify-email':
+      envVar = 'RATE_LIMIT_VERIFY_EMAIL_ENABLED';
+      break;
+    case 'public-item':
+      envVar = 'RATE_LIMIT_PUBLIC_ITEM_ENABLED';
+      break;
+    case 'scan':
+      envVar = 'RATE_LIMIT_SCAN_ENABLED';
+      break;
+    case 'scan-debounce':
+      // Check specific scan-debounce first, otherwise fallback to global scan setting
+      if (process.env.RATE_LIMIT_SCAN_DEBOUNCE_ENABLED === 'false') {
+        return false;
+      }
+      envVar = 'RATE_LIMIT_SCAN_ENABLED';
+      break;
+  }
+
+  if (envVar && process.env[envVar] === 'false') {
+    return false;
+  }
+
+  return true;
 }

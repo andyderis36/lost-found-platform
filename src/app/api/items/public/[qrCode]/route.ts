@@ -19,7 +19,7 @@ export async function GET(
     let headers = {};
 
     // Apply rate limiting (if enabled)
-    if (isRateLimitingEnabled()) {
+    if (isRateLimitingEnabled(RATE_LIMITS.PUBLIC_ITEM.prefix)) {
       const clientIp = extractClientIp(request);
 
       const allowed = await limitByIP(

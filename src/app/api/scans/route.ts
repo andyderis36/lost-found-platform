@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply rate limiting (if enabled)
-    if (isRateLimitingEnabled()) {
+    if (isRateLimitingEnabled(RATE_LIMITS.SCAN_GLOBAL.prefix)) {
       const clientIp = extractClientIp(request);
       const userAgent = request.headers.get('user-agent') || 'unknown';
 
@@ -107,34 +107,40 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check per-(IP+qrCode) debounce to prevent spam scanning same QR code
-      const debounceAllowed = await limitByIPAndResource(
-        clientIp,
-        qrCode,
-        RATE_LIMITS.SCAN_DEBOUNCE.points,
-        RATE_LIMITS.SCAN_DEBOUNCE.duration
-      );
-
-      if (!debounceAllowed) {
-        logBlockedAttempt(
+      // Check per-(IP+qrCode) debounce to prevent spam scanning same QR code (if enabled)
+      let isDebounceChecked = false;
+      if (isRateLimitingEnabled(RATE_LIMITS.SCAN_DEBOUNCE.prefix)) {
+        isDebounceChecked = true;
+        const debounceAllowed = await limitByIPAndResource(
           clientIp,
-          '/api/scans',
-          `Debounce limit exceeded for QR code ${qrCode} (1 scan per ${RATE_LIMITS.SCAN_DEBOUNCE.duration}s)`,
-          userAgent
+          qrCode,
+          RATE_LIMITS.SCAN_DEBOUNCE.points,
+          RATE_LIMITS.SCAN_DEBOUNCE.duration
         );
-        return NextResponse.json(
-          errorResponse(
-            `Please wait before scanning this QR code again. Try again in ${RATE_LIMITS.SCAN_DEBOUNCE.duration} seconds.`
-          ),
-          {
-            status: 429,
-            headers: {
-              'Retry-After': RATE_LIMITS.SCAN_DEBOUNCE.duration.toString(),
-            },
-          }
-        );
+
+        if (!debounceAllowed) {
+          logBlockedAttempt(
+            clientIp,
+            '/api/scans',
+            `Debounce limit exceeded for QR code ${qrCode} (1 scan per ${RATE_LIMITS.SCAN_DEBOUNCE.duration}s)`,
+            userAgent
+          );
+          return NextResponse.json(
+            errorResponse(
+              `Please wait before scanning this QR code again. Try again in ${RATE_LIMITS.SCAN_DEBOUNCE.duration} seconds.`
+            ),
+            {
+              status: 429,
+              headers: {
+                'Retry-After': RATE_LIMITS.SCAN_DEBOUNCE.duration.toString(),
+              },
+            }
+          );
+        }
       }
-      headers = { 'Retry-After': RATE_LIMITS.SCAN_DEBOUNCE.duration.toString() };
+      headers = { 
+        'Retry-After': (isDebounceChecked ? RATE_LIMITS.SCAN_DEBOUNCE.duration : RATE_LIMITS.SCAN_GLOBAL.duration).toString() 
+      };
     }
     
     // Validate required field

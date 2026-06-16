@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { SearchX, Loader2, CheckCircle2, ShieldAlert, Mail, User, Phone, Info, MapPin, Send, Lock, X } from 'lucide-react';
+import { SearchX, Loader2, CheckCircle2, ShieldAlert, Mail, User, Phone, Info, MapPin, Send, Lock, X, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ItemData {
@@ -41,6 +41,145 @@ export default function ScanPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; address?: string } | undefined>(undefined);
+  const [locationStatus, setLocationStatus] = useState<'detecting' | 'success' | 'denied'>('detecting');
+  const [geoErrorDetails, setGeoErrorDetails] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+
+  const requestInProgressRef = useRef(false);
+  const isMountedRef = useRef(true);
+
+  // Reverse geocoding helper using our internal API proxy
+  const reverseGeocode = async (lat: number, lon: number) => {
+    try {
+      const response = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
+      if (!response.ok) return;
+      const result = await response.json();
+      if (result.success && result.data?.display_name && isMountedRef.current) {
+        setLocation(prev => {
+          if (!prev) return { latitude: lat, longitude: lon, address: result.data.display_name };
+          return { ...prev, address: result.data.display_name };
+        });
+      }
+    } catch (err) {
+      console.error('[SCAN PAGE] Reverse geocoding error:', err);
+    }
+  };
+
+  const fetchLocation = (forceRetry = false) => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGeoErrorDetails('Geolocation is not supported by your browser or secure context (HTTPS) is required.');
+      setLocationStatus('denied');
+      return;
+    }
+
+    if (requestInProgressRef.current && !forceRetry) {
+      console.log('[SCAN PAGE] Geolocation fetch already in progress, skipping...');
+      return;
+    }
+
+    requestInProgressRef.current = true;
+    setLocationStatus('detecting');
+    setGeoErrorDetails('');
+
+    // Step 1: Coba ambil lokasi dengan akurasi rendah (WiFi/Cellular/IP) terlebih dahulu.
+    // Ini sangat cepat dan hampir selalu berhasil walaupun berada di dalam ruangan.
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (!isMountedRef.current) return;
+
+        console.log('[SCAN PAGE] Fast low-accuracy location succeeded:', position.coords);
+        const { latitude, longitude } = position.coords;
+        setLocation({ latitude, longitude });
+        setLocationStatus('success');
+        requestInProgressRef.current = false;
+
+        // Auto-geocode to display address
+        reverseGeocode(latitude, longitude);
+
+        // Step 2: Lakukan perbaikan akurasi dengan GPS di background
+        navigator.geolocation.getCurrentPosition(
+          (highPosition) => {
+            if (!isMountedRef.current) return;
+            console.log('[SCAN PAGE] Background high-accuracy refinement succeeded:', highPosition.coords);
+            const highLat = highPosition.coords.latitude;
+            const highLon = highPosition.coords.longitude;
+            setLocation(prev => ({
+              latitude: highLat,
+              longitude: highLon,
+              address: prev?.address
+            }));
+
+            reverseGeocode(highLat, highLon);
+          },
+          (highError) => {
+            console.log('[SCAN PAGE] Background high-accuracy refinement failed (ignored):', highError);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          }
+        );
+      },
+      (lowError) => {
+        if (!isMountedRef.current) return;
+        console.log('[SCAN PAGE] Fast low-accuracy location failed:', lowError);
+        requestInProgressRef.current = false;
+
+        // Jika errornya Permission Denied (user memblokir), tidak perlu coba high-accuracy
+        if (lowError.code === 1) {
+          setGeoErrorDetails('Permission denied. Please check your browser permission settings.');
+          setLocationStatus('denied');
+          return;
+        }
+
+        // Jika low accuracy gagal karena alasan lain (misal gps mati / offline), coba high-accuracy
+        navigator.geolocation.getCurrentPosition(
+          (highPosition) => {
+            if (!isMountedRef.current) return;
+            console.log('[SCAN PAGE] Fallback high-accuracy succeeded:', highPosition.coords);
+            const { latitude, longitude } = highPosition.coords;
+            setLocation({ latitude, longitude });
+            setLocationStatus('success');
+            reverseGeocode(latitude, longitude);
+          },
+          (highError) => {
+            if (!isMountedRef.current) return;
+            console.log('[SCAN PAGE] Fallback high-accuracy failed:', highError);
+            let detail = 'Unknown error';
+            if (highError.code === 1) detail = 'Permission denied. Please check your browser permission settings.';
+            else if (highError.code === 2) detail = 'Position unavailable. GPS or network location is turned off / unavailable on your device.';
+            else if (highError.code === 3) detail = 'Locating timed out. Weak GPS signal or network issue.';
+            else detail = highError.message;
+
+            setGeoErrorDetails(detail);
+            setLocationStatus('denied');
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+          }
+        );
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 6000,
+        maximumAge: 300000, // Izinkan cache 5 menit untuk kecepatan instan
+      }
+    );
+  };
+
+  // Ambil lokasi di awal saat halaman pertama kali dibuka
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchLocation();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -65,40 +204,45 @@ export default function ScanPage() {
     }
   }, [qrCode]);
 
+  const handleSearchLocation = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearchingLocation(true);
+    try {
+      const response = await fetch(`/api/geocode?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) throw new Error('Search failed');
+      const result = await response.json();
+      if (result.success && result.data && result.data.length > 0) {
+        const item = result.data[0];
+        setLocation({
+          latitude: parseFloat(item.lat),
+          longitude: parseFloat(item.lon),
+          address: item.display_name,
+        });
+        setLocationStatus('success');
+      } else {
+        alert('Location not found. Please try a different search term.');
+      }
+    } catch (err) {
+      console.error('Geocoding error:', err);
+      alert('Failed to search location. Please try again.');
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
 
     try {
-      let location = undefined;
-
-      if (navigator.geolocation) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 8000,
-              maximumAge: 0,
-              enableHighAccuracy: false,
-            });
-          });
-
-          location = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-        } catch {
-          console.log('[SCAN FORM] Location unavailable or denied');
-        }
-      }
-
       const payload = {
         qrCode,
         scannerName: formData.scannerName?.trim() || '',
         scannerEmail: formData.scannerEmail?.trim() || '',
         scannerPhone: formData.scannerPhone?.trim() || '',
         message: formData.message?.trim() || '',
-        location,
+        location: location, // Langsung gunakan koordinat hasil pre-fetch dari page load
       };
 
       const controller = new AbortController();
@@ -307,6 +451,109 @@ export default function ScanPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {/* Location Detection Status */}
+                {locationStatus === 'detecting' && (
+                  <div className="p-3 mb-4 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-3 text-sm text-foreground animate-pulse">
+                    <Loader2 className="w-4.5 h-4.5 text-primary animate-spin shrink-0" />
+                    <div>
+                      <span className="font-semibold">Detecting Location...</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">Please allow location access if prompted by your browser.</p>
+                    </div>
+                  </div>
+                )}
+
+                {locationStatus === 'success' && (
+                  <div className="p-3 mb-4 rounded-lg bg-green-500/10 border border-green-500/20 flex flex-col gap-2 text-sm text-foreground animate-in fade-in duration-300">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-green-600 shrink-0" />
+                      <div>
+                        <span className="font-semibold text-green-600">Location Detected Successfully!</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">Your location will be securely shared with the item owner.</p>
+                      </div>
+                    </div>
+                    {location?.address && (
+                      <p className="text-xs bg-green-500/5 border border-green-500/10 p-2 rounded text-green-800 dark:text-green-300 font-medium break-words leading-normal mt-1 flex items-start gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
+                        <span>{location.address}</span>
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {location && (
+                        <>
+                          <a
+                            href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 underline font-semibold flex items-center gap-1"
+                          >
+                            <MapPin className="w-3 h-3" />
+                            View location
+                          </a>
+                          <span className="text-muted-foreground/30 text-[10px]">|</span>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocation(undefined);
+                          setLocationStatus('denied');
+                        }}
+                        className="text-[10px] text-muted-foreground hover:text-foreground underline"
+                      >
+                        Change / reset location
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {locationStatus === 'denied' && (
+                  <div className="p-3 mb-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex flex-col gap-3 text-sm text-foreground animate-in fade-in duration-300">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-4.5 h-4.5 text-yellow-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-yellow-600">Location Access Denied / Unavailable</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">You can still submit the form to contact the owner without location details.</p>
+                        {geoErrorDetails && (
+                          <p className="text-[11px] text-yellow-800 dark:text-yellow-300 font-mono mt-1.5 border-t border-yellow-500/20 dark:border-yellow-300/10 pt-1.5 leading-relaxed">
+                            <span className="font-semibold uppercase tracking-wider text-[9px] opacity-80 mr-1">Reason:</span>
+                            {geoErrorDetails}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => fetchLocation(true)}
+                          className="text-[11px] text-yellow-700 dark:text-yellow-400 hover:underline text-left mt-2.5 font-semibold flex items-center gap-1.5"
+                        >
+                          <RefreshCw className="w-3 h-3 shrink-0" />
+                          Retry automatic detection
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Manual Location Input Option */}
+                    <div className="pt-2 border-t border-yellow-500/20 dark:border-yellow-300/10">
+                      <Label className="text-xs font-semibold text-foreground">Or set location manually:</Label>
+                      <div className="flex gap-2 mt-1.5">
+                        <Input 
+                          placeholder="e.g. Jakarta, Depok, Mall..." 
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="h-8 text-xs bg-background"
+                        />
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          onClick={handleSearchLocation} 
+                          disabled={isSearchingLocation}
+                          className="h-8 text-xs shrink-0"
+                        >
+                          {isSearchingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Set'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="scannerName" className="flex items-center gap-2">

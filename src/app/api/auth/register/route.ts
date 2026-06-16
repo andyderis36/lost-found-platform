@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     let headers = {};
 
     // Apply rate limiting (if enabled)
-    if (isRateLimitingEnabled()) {
+    if (isRateLimitingEnabled(RATE_LIMITS.AUTH_REGISTER.prefix)) {
       const clientIp = extractClientIp(request);
       const userAgent = request.headers.get('user-agent') || 'unknown';
 
